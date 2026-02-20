@@ -27,6 +27,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
+  Cell
 } from 'recharts';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
