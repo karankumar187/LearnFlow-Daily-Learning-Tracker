@@ -30,7 +30,7 @@ exports.suggestSchedule = async (req, res, next) => {
     }).select('title category priority estimatedTime');
 
     // Build the AI prompt
-    const systemPrompt = `You are an expert learning coach and schedule planner. Your task is to create a personalized weekly learning schedule based on the user's goals and preferences.
+    const systemPrompt = `<s>[INST] You are an expert learning coach and schedule planner. Your task is to create a personalized weekly learning schedule based on the user's goals and preferences.
 
 User's Request: "${prompt}"
 
@@ -39,7 +39,10 @@ Preferred Study Time: ${preferredTime || 'morning'}
 
 ${existingObjectives.length > 0 ? `Existing Learning Objectives:\n${existingObjectives.map(obj => `- ${obj.title} (${obj.category}, ${obj.estimatedTime}min)`).join('\n')}` : ''}
 
-Please create a detailed weekly schedule (Monday to Sunday) with specific learning objectives. Format your response as a valid JSON object with this exact structure:
+Please create a detailed weekly schedule (Monday to Sunday).
+CRITICAL: If the user requests multiple subjects (e.g. "dbms, dsa, sd"), you MUST mix these subjects every day. Create 2-4 distinct items per day covering different requested subjects.
+
+Format your response as a valid JSON object with this exact structure:
 
 {
   "schedule": [
@@ -49,7 +52,12 @@ Please create a detailed weekly schedule (Monday to Sunday) with specific learni
         {
           "objectiveTitle": "Learn Python Basics",
           "description": "Variables, data types, and basic operations",
-          "category": "Programming"
+          "category": "Python"
+        },
+        {
+          "objectiveTitle": "Database Normalization",
+          "description": "Understanding 1NF, 2NF, 3NF",
+          "category": "DBMS"
         }
       ]
     }
@@ -61,7 +69,7 @@ Important:
 - Provide ONLY the JSON response, no additional text before or after
 - Ensure all 7 days are covered (monday through sunday)
 - Each item must have objectiveTitle, description, and category
-- Do not include markdown formatting, just raw JSON`;
+- Do not include markdown formatting, just raw JSON [/INST]`;
 
     let aiResponse = null;
     let suggestedSchedule = null;
@@ -71,7 +79,14 @@ Important:
       try {
         const response = await axios.post(
           HUGGINGFACE_API_URL,
-          { inputs: systemPrompt },
+          {
+            inputs: systemPrompt,
+            parameters: {
+              max_new_tokens: 2000,
+              return_full_text: false,
+              temperature: 0.7
+            }
+          },
           {
             headers: {
               'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
@@ -380,9 +395,9 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
 
   // Parse prompt for keywords
   const promptLower = prompt.toLowerCase();
-  const subjects = [];
+  let subjects = [];
 
-  // Common learning subjects
+  // Common learning subjects including acronyms
   const subjectKeywords = {
     'programming': ['programming', 'coding', 'python', 'javascript', 'java', 'cpp', 'developer'],
     'web development': ['web', 'frontend', 'backend', 'fullstack', 'react', 'node'],
@@ -390,18 +405,33 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
     'design': ['design', 'ui', 'ux', 'graphic', 'figma', 'photoshop'],
     'language': ['language', 'english', 'spanish', 'french', 'german', 'learning'],
     'math': ['math', 'mathematics', 'calculus', 'algebra', 'statistics'],
-    'business': ['business', 'marketing', 'finance', 'entrepreneurship', 'management']
+    'business': ['business', 'marketing', 'finance', 'entrepreneurship', 'management'],
+    'system design': ['system design', 'sd', 'architecture', 'scalability'],
+    'database': ['database', 'dbms', 'sql', 'nosql', 'mongodb', 'postgresql'],
+    'algorithms': ['algorithms', 'data structures', 'dsa', 'leetcode'],
+    'operating systems': ['operating systems', 'os', 'linux']
   };
 
   for (const [subject, keywords] of Object.entries(subjectKeywords)) {
-    if (keywords.some(kw => promptLower.includes(kw))) {
+    // Check if any keyword stands alone or exists in prompt
+    if (keywords.some(kw => promptLower.includes(kw) || new RegExp(`\\b${kw}\\b`).test(promptLower))) {
       subjects.push(subject);
     }
   }
 
-  // Default subjects if none detected
+  // If no predefined subjects found, dynamically extract from comma lists
   if (subjects.length === 0) {
-    subjects.push('general learning');
+    if (promptLower.includes(',')) {
+      subjects = promptLower.split(',').map(s => s.trim()).filter(s => s.length > 0 && s.length < 25);
+    } else {
+      // Split by spaces and grab a few prominent words
+      const words = promptLower.split(' ').filter(w => w.length > 3 && !['want', 'learn', 'study', 'about', 'how', 'the', 'and', 'for'].includes(w));
+      subjects = words.slice(0, 3);
+    }
+
+    if (subjects.length === 0) {
+      subjects.push('general learning');
+    }
   }
 
   // Generate schedule for each day
@@ -409,11 +439,12 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
     const day = days[i];
     const items = [];
 
-    // Weekend has lighter schedule
+    // Weekend has lighter schedule, weekdays have more items
     const isWeekend = day === 'saturday' || day === 'sunday';
-    const numItems = isWeekend ? 1 : Math.min(subjects.length, 2);
+    const numItems = isWeekend ? Math.max(1, Math.ceil(subjects.length / 2)) : Math.min(subjects.length, 3);
 
     for (let j = 0; j < numItems; j++) {
+      // Rotate through subjects so each day gets a mix
       const subjectIndex = (i + j) % subjects.length;
       const subject = subjects[subjectIndex];
 
@@ -425,19 +456,27 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
         'language': ['Vocabulary', 'Grammar', 'Speaking Practice', 'Listening', 'Writing'],
         'math': ['Algebra', 'Calculus', 'Statistics', 'Linear Algebra', 'Problem Solving'],
         'business': ['Market Research', 'Business Strategy', 'Financial Planning', 'Marketing', 'Operations'],
+        'system design': ['Load Balancing', 'Microservices', 'Caching', 'Database Partitioning', 'Message Queues'],
+        'database': ['Entity-Relationship Models', 'Normalization', 'SQL Queries', 'Indexing', 'Transactions'],
+        'algorithms': ['Arrays & Strings', 'Linked Lists', 'Trees & Graphs', 'Dynamic Programming', 'Sorting & Searching'],
+        'operating systems': ['Processes & Threads', 'Memory Management', 'File Systems', 'Concurrency', 'Deadlocks'],
         'general learning': ['Core Concepts', 'Practice Problems', 'Review', 'Advanced Topics', 'Project Work']
       };
 
       const topics = learningTopics[subject] || learningTopics['general learning'];
       const topic = topics[(i + j) % topics.length];
 
+      const formattedSubject = subject.toUpperCase() === subject || subject.length <= 3
+        ? subject.toUpperCase()
+        : subject.charAt(0).toUpperCase() + subject.slice(1);
+
       items.push({
-        objectiveTitle: `${subject.charAt(0).toUpperCase() + subject.slice(1)}: ${topic}`,
+        objectiveTitle: `${formattedSubject}: ${topic}`,
         description: `Focus on ${topic.toLowerCase()} with practical exercises`,
         startTime: null,
         endTime: null,
-        duration: 60,
-        category: subject.charAt(0).toUpperCase() + subject.slice(1)
+        duration: Math.floor((studyHoursPerDay * 60) / numItems),
+        category: formattedSubject
       });
     }
 
@@ -447,7 +486,7 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
     });
   }
 
-  const uniqueSubjects = [...new Set(subjects)];
+  const uniqueSubjects = [...new Set(subjects)].map(s => s.toUpperCase() === s || s.length <= 3 ? s.toUpperCase() : s.charAt(0).toUpperCase() + s.slice(1));
   const subjectsLabel = uniqueSubjects.join(', ');
 
   return {
