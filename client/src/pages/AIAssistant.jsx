@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { aiAPI, objectivesAPI } from '../services/api';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { aiAPI, objectivesAPI } from "../services/api";
+import { toast } from "sonner";
 import {
   Sparkles,
   Loader2,
@@ -14,28 +14,63 @@ import {
   Lightbulb,
   Wand2,
   BookOpen,
-  Plus
-} from 'lucide-react';
+  Plus,
+  MessageSquare,
+  Send,
+} from "lucide-react";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const timeOptions = [
-  { value: 'morning', label: 'Morning (6AM - 12PM)' },
-  { value: 'afternoon', label: 'Afternoon (12PM - 6PM)' },
-  { value: 'evening', label: 'Evening (6PM - 10PM)' },
-  { value: 'night', label: 'Night (10PM - 2AM)' }
+  { value: "morning", label: "Morning (6AM - 12PM)" },
+  { value: "afternoon", label: "Afternoon (12PM - 6PM)" },
+  { value: "evening", label: "Evening (6PM - 10PM)" },
+  { value: "night", label: "Night (10PM - 2AM)" },
 ];
 
-const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const days = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 const AIAssistant = () => {
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const [studyHours, setStudyHours] = useState(4);
-  const [preferredTime, setPreferredTime] = useState('morning');
+  const [preferredTime, setPreferredTime] = useState("morning");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [expandedDay, setExpandedDay] = useState(null);
   const [applying, setApplying] = useState(false);
   const [objectives, setObjectives] = useState([]);
+
+  // Chat State
+  const [activeTab, setActiveTab] = useState("schedule"); // 'schedule' or 'chat'
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Hi! I'm your LearnFlow AI coach. How can I help you with your learning goals today?",
+    },
+  ]);
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // GSAP animations for tab switching
+  useGSAP(() => {
+    gsap.from(".tab-content", {
+      y: 20,
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.out",
+      clearProps: "all",
+    });
+  }, [activeTab]);
 
   useEffect(() => {
     fetchSuggestions();
@@ -47,7 +82,7 @@ const AIAssistant = () => {
       const response = await aiAPI.getSuggestions();
       setSuggestions(response.data.data);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      console.error("Error fetching suggestions:", error);
     }
   };
 
@@ -56,14 +91,14 @@ const AIAssistant = () => {
       const res = await objectivesAPI.getAll({ isActive: true });
       setObjectives(res.data.data || []);
     } catch (error) {
-      console.error('Error fetching objectives for AI tips:', error);
+      console.error("Error fetching objectives for AI tips:", error);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) {
-      toast.error('Please enter what you want to learn');
+      toast.error("Please enter what you want to learn");
       return;
     }
 
@@ -72,20 +107,57 @@ const AIAssistant = () => {
       const response = await aiAPI.suggestSchedule({
         prompt,
         studyHoursPerDay: studyHours,
-        preferredTime
+        preferredTime,
       });
 
       setSuggestion(response.data.data);
-      toast.success('AI schedule generated successfully!');
+      toast.success("AI schedule generated successfully!");
       fetchSuggestions();
     } catch (error) {
-      toast.error('Failed to generate schedule');
+      toast.error("Failed to generate schedule");
     } finally {
       setLoading(false);
     }
   };
 
-  // Chat functionality has been removed per requirements
+  const handleChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || chatLoading) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput("");
+    setChatMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMessage },
+    ]);
+
+    try {
+      setChatLoading(true);
+      const response = await aiAPI.chat({ prompt: userMessage });
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            response.data.data.reply ||
+            "I didn't quite catch that. Could you rephrase?",
+        },
+      ]);
+    } catch (error) {
+      toast.error("Failed to get response from AI");
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Sorry, I'm having trouble connecting right now. Please try again later.",
+        },
+      ]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const handleApplySuggestion = async () => {
     if (!suggestion) return;
@@ -94,30 +166,31 @@ const AIAssistant = () => {
       setApplying(true);
       await aiAPI.applySuggestion(suggestion.suggestionId, {
         name: `AI Schedule: ${prompt.substring(0, 50)}...`,
-        description: `Generated by AI for: ${prompt}`
+        description: `Generated by AI for: ${prompt}`,
       });
 
-      toast.success('Schedule applied successfully!');
+      toast.success("Schedule applied successfully!");
       setSuggestion(null);
-      setPrompt('');
+      setPrompt("");
       fetchSuggestions();
     } catch (error) {
-      toast.error('Failed to apply schedule');
+      toast.error("Failed to apply schedule");
     } finally {
       setApplying(false);
     }
   };
 
   const handleDeleteSuggestion = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this suggestion?')) return;
+    if (!window.confirm("Are you sure you want to delete this suggestion?"))
+      return;
 
     try {
       // Optimistically update UI
       setSuggestions((prev) => prev.filter((s) => s._id !== id));
       await aiAPI.deleteSuggestion(id);
-      toast.success('Suggestion deleted');
+      toast.success("Suggestion deleted");
     } catch (error) {
-      toast.error('Failed to delete suggestion');
+      toast.error("Failed to delete suggestion");
       // Refetch to make sure UI reflects server state
       fetchSuggestions();
     }
@@ -125,7 +198,7 @@ const AIAssistant = () => {
 
   const getDayItems = (day) => {
     if (!suggestion?.schedule) return [];
-    const daySchedule = suggestion.schedule.find(s => s.day === day);
+    const daySchedule = suggestion.schedule.find((s) => s.day === day);
     return daySchedule?.items || [];
   };
 
@@ -138,8 +211,12 @@ const AIAssistant = () => {
             <Sparkles className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">AI Learning Assistant</h2>
-            <p className="text-gray-500 dark:text-gray-400">Get personalized learning schedules and smart study suggestions</p>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+              AI Learning Assistant
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400">
+              Get personalized learning schedules and smart study suggestions
+            </p>
           </div>
         </div>
 
@@ -163,228 +240,370 @@ const AIAssistant = () => {
         </div>
       </div>
 
-      {/* Schedule Generator */}
-      <div className="glass-card rounded-xl p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-              What do you want to learn?
-            </label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g., I want to learn Python programming and web development in 3 months..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Study Hours Per Day
-              </label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min={1}
-                  max={12}
-                  value={studyHours}
-                  onChange={(e) => setStudyHours(parseInt(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                />
-                <span className="w-12 text-center font-medium text-gray-700 dark:text-gray-200">{studyHours}h</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Preferred Study Time
-              </label>
-              <select
-                value={preferredTime}
-                onChange={(e) => setPreferredTime(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
-              >
-                {timeOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !prompt.trim()}
-            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-70 hover:shadow-lg hover:shadow-indigo-200 transition-all"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Generating Schedule...
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-5 h-5" />
-                Generate Schedule
-              </>
-            )}
-          </button>
-        </form>
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 dark:border-slate-800">
+        <button
+          onClick={() => setActiveTab("schedule")}
+          className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === "schedule"
+              ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          Schedule Generator
+        </button>
+        <button
+          onClick={() => setActiveTab("chat")}
+          className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === "chat"
+              ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          Chat with AI
+        </button>
       </div>
 
-      {/* Chat with AI removed as per requirements */}
-
-      {/* Generated Schedule */}
-      {suggestion && (
-        <div className="glass-card rounded-xl p-6 animate-fadeIn">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-indigo-500" />
-                AI Generated Schedule
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{suggestion.summary}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSuggestion(null)}
-                className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                Discard
-              </button>
-              <button
-                onClick={handleApplySuggestion}
-                disabled={applying}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium flex items-center gap-2 disabled:opacity-70 hover:shadow-lg transition-all"
-              >
-                {applying ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                Apply Schedule
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {days.map((day) => {
-              const items = getDayItems(day);
-              const isExpanded = expandedDay === day;
-
-              return (
-                <div key={day} className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setExpandedDay(isExpanded ? null : day)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                      <span className="font-medium text-gray-800 dark:text-gray-100 capitalize">{day}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">({items.length} items)</span>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    )}
-                  </button>
-
-                  {isExpanded && (
-                    <div className="p-4 space-y-3 bg-white dark:bg-slate-900">
-                      {items.length > 0 ? (
-                        items.map((item, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-800"
-                          >
-                            <div>
-                              <h4 className="font-medium text-gray-800 dark:text-gray-100">{item.objectiveTitle}</h4>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
-                            </div>
-                            <span className="px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs">
-                              {item.category}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-center text-gray-500 dark:text-gray-400 py-4">No items scheduled</p>
-                      )}
-                    </div>
-                  )}
+      <div className="tab-content">
+        {activeTab === "schedule" ? (
+          <div className="space-y-6">
+            {/* Schedule Generator */}
+            <div className="glass-card rounded-xl p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    What do you want to learn?
+                  </label>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="e.g., I want to learn Python programming and web development in 3 months..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all resize-none"
+                  />
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
-      {/* Previous Suggestions */}
-      {suggestions.length > 0 && (
-        <div className="glass-card rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Previous Suggestions</h3>
-          <div className="space-y-3">
-            {suggestions.slice(0, 5).map((sugg) => (
-              <div
-                key={sugg._id}
-                className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 dark:text-gray-100 truncate">{sugg.prompt}</p>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(sugg.createdAt).toLocaleDateString()}
-                    {sugg.isApplied && (
-                      <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs">
-                        Applied
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Study Hours Per Day
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="range"
+                        min={1}
+                        max={12}
+                        value={studyHours}
+                        onChange={(e) =>
+                          setStudyHours(parseInt(e.target.value))
+                        }
+                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                      <span className="w-12 text-center font-medium text-gray-700 dark:text-gray-200">
+                        {studyHours}h
                       </span>
-                    )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Preferred Study Time
+                    </label>
+                    <select
+                      value={preferredTime}
+                      onChange={(e) => setPreferredTime(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    >
+                      {timeOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
+
                 <button
-                  onClick={() => handleDeleteSuggestion(sugg._id)}
-                  className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-4"
+                  type="submit"
+                  disabled={loading || !prompt.trim()}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-70 hover:shadow-lg hover:shadow-indigo-200 transition-all"
                 >
-                  <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Generating Schedule...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-5 h-5" />
+                      Generate Schedule
+                    </>
+                  )}
                 </button>
+              </form>
+            </div>
+
+            {/* Generated Schedule */}
+            {suggestion && (
+              <div className="glass-card rounded-xl p-6 animate-fadeIn">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-indigo-500" />
+                      AI Generated Schedule
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {suggestion.summary}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSuggestion(null)}
+                      className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Discard
+                    </button>
+                    <button
+                      onClick={handleApplySuggestion}
+                      disabled={applying}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium flex items-center gap-2 disabled:opacity-70 hover:shadow-lg transition-all"
+                    >
+                      {applying ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      Apply Schedule
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {days.map((day) => {
+                    const items = getDayItems(day);
+                    const isExpanded = expandedDay === day;
+
+                    return (
+                      <div
+                        key={day}
+                        className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden"
+                      >
+                        <button
+                          onClick={() =>
+                            setExpandedDay(isExpanded ? null : day)
+                          }
+                          className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            <span className="font-medium text-gray-800 dark:text-gray-100 capitalize">
+                              {day}
+                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              ({items.length} items)
+                            </span>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                          )}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="p-4 space-y-3 bg-white dark:bg-slate-900">
+                            {items.length > 0 ? (
+                              items.map((item, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-800"
+                                >
+                                  <div>
+                                    <h4 className="font-medium text-gray-800 dark:text-gray-100">
+                                      {item.objectiveTitle}
+                                    </h4>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      {item.description}
+                                    </p>
+                                  </div>
+                                  <span className="px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs">
+                                    {item.category}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                                No items scheduled
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
 
-      {/* Tips Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-card rounded-xl p-5">
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mb-3">
-            <Target className="w-5 h-5 text-indigo-600" />
-          </div>
-          <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Be Specific</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Describe your learning goals in detail for better schedule recommendations.
-          </p>
-        </div>
+            {/* Previous Suggestions */}
+            {suggestions.length > 0 && (
+              <div className="glass-card rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  Previous Suggestions
+                </h3>
+                <div className="space-y-3">
+                  {suggestions.slice(0, 5).map((sugg) => (
+                    <div
+                      key={sugg._id}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 dark:text-gray-100 truncate">
+                          {sugg.prompt}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(sugg.createdAt).toLocaleDateString()}
+                          {sugg.isApplied && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs">
+                              Applied
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteSuggestion(sugg._id)}
+                        className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-4"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        <div className="glass-card rounded-xl p-5">
-          <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-3">
-            <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
-          </div>
-          <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Set Realistic Goals</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Start with manageable study hours and gradually increase as you build habits.
-          </p>
-        </div>
+            {/* Tips Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="glass-card rounded-xl p-5">
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mb-3">
+                  <Target className="w-5 h-5 text-indigo-600" />
+                </div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                  Be Specific
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Describe your learning goals in detail for better schedule
+                  recommendations.
+                </p>
+              </div>
 
-        <div className="glass-card rounded-xl p-5">
-          <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-3">
-            <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="glass-card rounded-xl p-5">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-3">
+                  <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                  Set Realistic Goals
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Start with manageable study hours and gradually increase as
+                  you build habits.
+                </p>
+              </div>
+
+              <div className="glass-card rounded-xl p-5">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-3">
+                  <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                  Iterate & Improve
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Regenerate schedules based on your progress and adjust as
+                  needed.
+                </p>
+              </div>
+            </div>
           </div>
-          <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Iterate & Improve</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Regenerate schedules based on your progress and adjust as needed.
-          </p>
-        </div>
+        ) : (
+          <div className="glass-card rounded-xl flex flex-col h-[600px] overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-5 py-3 ${
+                      msg.role === "user"
+                        ? "bg-indigo-600 text-white rounded-br-none"
+                        : "bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-bl-none"
+                    }`}
+                  >
+                    {msg.role === "assistant" && (
+                      <div className="flex items-center gap-2 mb-1 text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                        <Sparkles className="w-4 h-4" />
+                        AI Coach
+                      </div>
+                    )}
+                    <p className="whitespace-pre-wrap leading-relaxed text-[15px]">
+                      {msg.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl rounded-bl-none px-5 py-4 flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    ></span>
+                    <span
+                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    ></span>
+                    <span
+                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    ></span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+              <form
+                onSubmit={handleChatSubmit}
+                className="flex items-end gap-2"
+              >
+                <textarea
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleChatSubmit(e);
+                    }
+                  }}
+                  placeholder="Ask me anything about your learning progress..."
+                  rows={1}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all resize-none min-h-[50px] max-h-[150px]"
+                />
+                <button
+                  type="submit"
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="p-3 rounded-xl bg-indigo-600 text-white disabled:opacity-50 hover:bg-indigo-700 transition-colors flex-shrink-0"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

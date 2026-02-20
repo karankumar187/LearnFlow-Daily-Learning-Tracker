@@ -65,7 +65,7 @@ Important:
 
     let aiResponse = null;
     let suggestedSchedule = null;
-    
+
     // Try Hugging Face API if key is available
     if (HUGGINGFACE_API_KEY) {
       try {
@@ -94,7 +94,7 @@ Important:
     if (aiResponse) {
       suggestedSchedule = parseAIResponse(aiResponse, prompt);
     }
-    
+
     // If parsing failed or no API key, use intelligent fallback
     if (!suggestedSchedule || !suggestedSchedule.schedule || suggestedSchedule.schedule.length === 0) {
       console.log('Using fallback schedule generator');
@@ -158,11 +158,11 @@ exports.applySuggestion = async (req, res, next) => {
     // Create learning objectives from suggestion if they don't exist
     const weeklySchedule = [];
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    
+
     for (const day of days) {
       const dayItems = suggestion.suggestedSchedule.filter(item => item.day === day);
       const items = [];
-      
+
       for (const item of dayItems) {
         // Check if objective exists
         let objective = await LearningObjective.findOne({
@@ -343,21 +343,21 @@ exports.deleteSuggestion = async (req, res, next) => {
 // Helper function to format schedule for storage
 function formatScheduleForStorage(schedule) {
   if (!Array.isArray(schedule)) return [];
-  
+
   const formatted = [];
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  
+
   for (const daySchedule of schedule) {
     if (!daySchedule || !daySchedule.day) continue;
-    
+
     const day = daySchedule.day.toLowerCase();
     if (!days.includes(day)) continue;
-    
+
     const items = daySchedule.items || [];
-    
+
     for (const item of items) {
       if (!item || !item.objectiveTitle) continue;
-      
+
       formatted.push({
         objectiveTitle: item.objectiveTitle,
         description: item.description || '',
@@ -369,7 +369,7 @@ function formatScheduleForStorage(schedule) {
       });
     }
   }
-  
+
   return formatted;
 }
 
@@ -377,11 +377,11 @@ function formatScheduleForStorage(schedule) {
 function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime = 'morning', existingObjectives) {
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const schedule = [];
-  
+
   // Parse prompt for keywords
   const promptLower = prompt.toLowerCase();
   const subjects = [];
-  
+
   // Common learning subjects
   const subjectKeywords = {
     'programming': ['programming', 'coding', 'python', 'javascript', 'java', 'cpp', 'developer'],
@@ -392,31 +392,31 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
     'math': ['math', 'mathematics', 'calculus', 'algebra', 'statistics'],
     'business': ['business', 'marketing', 'finance', 'entrepreneurship', 'management']
   };
-  
+
   for (const [subject, keywords] of Object.entries(subjectKeywords)) {
     if (keywords.some(kw => promptLower.includes(kw))) {
       subjects.push(subject);
     }
   }
-  
+
   // Default subjects if none detected
   if (subjects.length === 0) {
     subjects.push('general learning');
   }
-  
+
   // Generate schedule for each day
   for (let i = 0; i < days.length; i++) {
     const day = days[i];
     const items = [];
-    
+
     // Weekend has lighter schedule
     const isWeekend = day === 'saturday' || day === 'sunday';
     const numItems = isWeekend ? 1 : Math.min(subjects.length, 2);
-    
+
     for (let j = 0; j < numItems; j++) {
       const subjectIndex = (i + j) % subjects.length;
       const subject = subjects[subjectIndex];
-      
+
       const learningTopics = {
         'programming': ['Variables and Data Types', 'Control Structures', 'Functions', 'OOP Concepts', 'Data Structures'],
         'web development': ['HTML & CSS Basics', 'JavaScript Fundamentals', 'React Components', 'API Integration', 'Database Design'],
@@ -427,10 +427,10 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
         'business': ['Market Research', 'Business Strategy', 'Financial Planning', 'Marketing', 'Operations'],
         'general learning': ['Core Concepts', 'Practice Problems', 'Review', 'Advanced Topics', 'Project Work']
       };
-      
+
       const topics = learningTopics[subject] || learningTopics['general learning'];
       const topic = topics[(i + j) % topics.length];
-      
+
       items.push({
         objectiveTitle: `${subject.charAt(0).toUpperCase() + subject.slice(1)}: ${topic}`,
         description: `Focus on ${topic.toLowerCase()} with practical exercises`,
@@ -440,13 +440,13 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
         category: subject.charAt(0).toUpperCase() + subject.slice(1)
       });
     }
-    
+
     schedule.push({
       day,
       items
     });
   }
-  
+
   const uniqueSubjects = [...new Set(subjects)];
   const subjectsLabel = uniqueSubjects.join(', ');
 
@@ -461,12 +461,12 @@ function parseAIResponse(aiResponse, originalPrompt) {
   try {
     // Remove markdown code blocks if present
     let cleanedResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    
+
     // Try to find JSON object
     const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      
+
       // Validate structure
       if (parsed.schedule && Array.isArray(parsed.schedule)) {
         return {
@@ -475,7 +475,7 @@ function parseAIResponse(aiResponse, originalPrompt) {
         };
       }
     }
-    
+
     // Try alternative parsing - look for array directly
     const arrayMatch = cleanedResponse.match(/\[[\s\S]*\]/);
     if (arrayMatch) {
@@ -490,7 +490,7 @@ function parseAIResponse(aiResponse, originalPrompt) {
   } catch (e) {
     console.log('Failed to parse AI response as JSON:', e.message);
   }
-  
+
   return null;
 }
 
@@ -513,15 +513,21 @@ exports.chatWithAI = async (req, res, next) => {
 
     if (HUGGINGFACE_API_KEY) {
       try {
-        const systemPrompt = `You are a friendly learning coach and tutor for the LearnFlow app.
+        const systemPrompt = `<s>[INST] You are a friendly, encouraging learning coach and tutor for the LearnFlow app.
+Help the user with their learning goals. Be concise, concrete, and actionable. Do NOT return JSON, only natural language.
 
-User: "${prompt}"
-
-Answer as a short, focused paragraph. Be concrete and actionable. Do NOT return JSON, only natural language.`;
+User: "${prompt}" [/INST]`;
 
         const response = await axios.post(
           HUGGINGFACE_API_URL,
-          { inputs: systemPrompt },
+          {
+            inputs: systemPrompt,
+            parameters: {
+              max_new_tokens: 250,
+              return_full_text: false,
+              temperature: 0.7
+            }
+          },
           {
             headers: {
               'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
@@ -532,7 +538,11 @@ Answer as a short, focused paragraph. Be concrete and actionable. Do NOT return 
         );
 
         if (response.data && Array.isArray(response.data) && response.data[0] && response.data[0].generated_text) {
-          const raw = response.data[0].generated_text.trim();
+          let raw = response.data[0].generated_text.trim();
+          // Fallback cleanup if return_full_text: false is ignored by the specific model endpoint
+          if (raw.includes('[/INST]')) {
+            raw = raw.split('[/INST]')[1].trim();
+          }
           reply = raw;
         }
       } catch (apiError) {
