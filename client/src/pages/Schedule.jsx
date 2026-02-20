@@ -260,8 +260,8 @@ const Schedule = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Weekly Schedule</h2>
-          <p className="text-gray-500">Plan and manage your learning schedule</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Weekly Schedule</h2>
+          <p className="text-gray-500 dark:text-gray-400">Plan and manage your learning schedule</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -339,14 +339,14 @@ const Schedule = () => {
 
           {/* Day's Schedule */}
           <div className="glass-card rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 capitalize">{selectedDay}</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 capitalize">{selectedDay}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {getDaySchedule().length} items scheduled
                   </p>
                 </div>
@@ -374,7 +374,7 @@ const Schedule = () => {
                     <div
                       key={index}
                       data-objective-id={objective._id}
-                      className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div
@@ -384,8 +384,8 @@ const Schedule = () => {
                           <BookOpen className="w-5 h-5" style={{ color: objective.color }} />
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-800">{objective.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <h4 className="font-medium text-gray-800 dark:text-gray-100">{objective.title}</h4>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                             <span>{objective.category}</span>
                             <span>•</span>
                             <span>{objective.estimatedTime} min</span>
@@ -399,7 +399,7 @@ const Schedule = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {progress?.status === 'completed' && (
                           <div className="flex items-center gap-2">
                             <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-sm font-medium">

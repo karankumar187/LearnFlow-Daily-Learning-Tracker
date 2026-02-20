@@ -160,8 +160,8 @@ const AIAssistant = () => {
             <Sparkles className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">AI Learning Assistant</h2>
-            <p className="text-gray-500">Get personalized learning schedules and smart study suggestions</p>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">AI Learning Assistant</h2>
+            <p className="text-gray-500 dark:text-gray-400">Get personalized learning schedules and smart study suggestions</p>
           </div>
         </div>
 
@@ -189,7 +189,7 @@ const AIAssistant = () => {
       <div className="glass-card rounded-xl p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               What do you want to learn?
             </label>
             <textarea
@@ -197,13 +197,13 @@ const AIAssistant = () => {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g., I want to learn Python programming and web development in 3 months..."
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all resize-none"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all resize-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Study Hours Per Day
               </label>
               <div className="flex items-center gap-4">
@@ -215,18 +215,18 @@ const AIAssistant = () => {
                   onChange={(e) => setStudyHours(parseInt(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                 />
-                <span className="w-12 text-center font-medium text-gray-700">{studyHours}h</span>
+                <span className="w-12 text-center font-medium text-gray-700 dark:text-gray-200">{studyHours}h</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Preferred Study Time
               </label>
               <select
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
               >
                 {timeOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>

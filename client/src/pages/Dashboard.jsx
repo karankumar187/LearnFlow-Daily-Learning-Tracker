@@ -31,6 +31,11 @@ import {
 } from 'recharts';
 import { gsap } from 'gsap';
 
+const getTodayInIST = () => {
+  const istString = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+  return new Date(istString);
+};
+
 const Dashboard = () => {
   const [stats, setStats] = useState({
     total: 0,
@@ -47,7 +52,7 @@ const Dashboard = () => {
   const [objectives, setObjectives] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentDate] = useState(new Date());
+  const [currentDate] = useState(getTodayInIST());
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [dailyAnalytics, setDailyAnalytics] = useState({});
 
@@ -170,7 +175,7 @@ const Dashboard = () => {
 
   const isToday = (dayItem) => {
     if (!dayItem?.date) return false;
-    const today = new Date();
+    const today = getTodayInIST();
     return dayItem.date.toDateString() === today.toDateString();
   };
 

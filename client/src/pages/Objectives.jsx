@@ -232,8 +232,8 @@ const Objectives = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Learning Objectives</h2>
-          <p className="text-gray-500">Manage your learning goals and track progress</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Learning Objectives</h2>
+          <p className="text-gray-500 dark:text-gray-400">Manage your learning goals and track progress</p>
         </div>
         <button
           onClick={() => {
@@ -258,14 +258,14 @@ const Objectives = () => {
               placeholder="Search objectives..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
             />
           </div>
           <div className="flex gap-4">
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+              className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
             >
               <option value="all">All Categories</option>
               {categories.map(cat => (
@@ -275,7 +275,7 @@ const Objectives = () => {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+              className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
             >
               <option value="all">All Priorities</option>
               <option value="high">High</option>
@@ -320,18 +320,18 @@ const Objectives = () => {
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-gray-800 mb-2 line-clamp-1">{objective.title}</h3>
-                <p className="text-sm text-gray-500 mb-4 line-clamp-2">{objective.description}</p>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 line-clamp-1">{objective.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{objective.description}</p>
 
                 <div className="flex items-center justify-between">
                   <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${getPriorityClass(objective.priority)}`}>
                     {objective.priority}
                   </span>
-                  <span className="text-sm text-gray-500">{objective.estimatedTime} min</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{objective.estimatedTime} min</span>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <span className="text-xs text-gray-400">{objective.category}</span>
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{objective.category}</span>
                 </div>
               </div>
             );
