@@ -71,6 +71,13 @@ exports.createOrUpdateProgress = async (req, res, next) => {
 
     if (status === 'completed') {
       updateData.completedAt = moment.tz(TIMEZONE).toDate();
+      // Auto-fill timeSpent using objective's estimated time if not explicitly provided
+      if (updateData.timeSpent === undefined) {
+        // Only override if progress doesn't already have timeSpent recorded
+        if (!progress || !progress.timeSpent) {
+          updateData.timeSpent = objective.estimatedTime || 0;
+        }
+      }
     } else {
       updateData.completedAt = null;
     }
