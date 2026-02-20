@@ -294,44 +294,62 @@ const Objectives = () => {
             return (
               <div
                 key={objective._id}
-                className="glass-card rounded-xl p-5 hover:shadow-lg transition-all cursor-pointer"
+                className="group relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer border-2"
+                style={{
+                  borderColor: `${objective.color}30`,
+                  boxShadow: `0 4px 20px -5px ${objective.color}20`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = objective.color;
+                  e.currentTarget.style.boxShadow = `0 20px 25px -5px ${objective.color}40, 0 8px 10px -6px ${objective.color}20`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = `${objective.color}30`;
+                  e.currentTarget.style.boxShadow = `0 4px 20px -5px ${objective.color}20`;
+                }}
                 onClick={() => handleViewProgress(objective)}
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-5">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center"
                     style={{ backgroundColor: objective.color + '20' }}
                   >
                     <IconComponent className="w-6 h-6" style={{ color: objective.color }} />
                   </div>
-                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleEdit(objective)}
-                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
                     >
                       <Edit2 className="w-4 h-4 text-gray-500" />
                     </button>
                     <button
                       onClick={() => handleDelete(objective._id)}
-                      className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 line-clamp-1">{objective.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{objective.description}</p>
+                <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100 mb-2 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{objective.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 line-clamp-2 leading-relaxed">{objective.description}</p>
 
                 <div className="flex items-center justify-between">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${getPriorityClass(objective.priority)}`}>
-                    {objective.priority}
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide ${getPriorityClass(objective.priority)}`}>
+                    {objective.priority.toUpperCase()}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{objective.estimatedTime} min</span>
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-gray-400">
+                    <Clock className="w-4 h-4" />
+                    <span>{objective.estimatedTime} min</span>
+                  </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-800">
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{objective.category}</span>
+                <div className="mt-5 pt-4 border-t border-gray-100 dark:border-slate-800 flex justify-between items-center">
+                  <span className="px-3 py-1 bg-gray-50 dark:bg-slate-800 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {objective.category}
+                  </span>
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: objective.color }} />
                 </div>
               </div>
             );
@@ -441,8 +459,8 @@ const Objectives = () => {
                         type="button"
                         onClick={() => setFormData({ ...formData, icon: option.value })}
                         className={`p-3 rounded-lg border-2 transition-all ${formData.icon === option.value
-                            ? 'border-indigo-500 bg-indigo-50'
-                            : 'border-gray-200 hover:bg-gray-50'
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:bg-gray-50'
                           }`}
                       >
                         <Icon className="w-5 h-5 mx-auto" />

@@ -4,6 +4,13 @@ const dotenv = require('dotenv');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 
+// Security packages
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const rateLimit = require('express-rate-limit');
+
 // Load env variables in development
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
@@ -39,6 +46,26 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
+
+// Set security HTTP headers
+app.use(helmet());
+
+// Sanitize data against NoSQL Query Injection
+app.use(mongoSanitize());
+
+// Sanitize data against XSS
+app.use(xss());
+
+// Prevent HTTP Param Pollution
+app.use(hpp());
+
+// Rate Limiting (100 reqs per 10 mins)
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests from this IP, please try again in 10 minutes'
+});
+app.use('/api', limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -139,7 +166,7 @@ connectDB()
 
       try {
         const today = moment.tz('Asia/Kolkata').startOf('day').toDate();
-        const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const todayDay = days[moment.tz('Asia/Kolkata').day()];
 
         const schedules = await Schedule.find({
