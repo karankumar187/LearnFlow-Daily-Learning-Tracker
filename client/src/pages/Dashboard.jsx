@@ -180,7 +180,14 @@ const Dashboard = () => {
   };
 
   const getDayStatus = (dateObj) => {
-    const key = dateObj.toISOString().split('T')[0];
+    // Build date key in the same timezone as analytics (Asia/Kolkata)
+    const istFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const key = istFormatter.format(dateObj); // YYYY-MM-DD
     const data = dailyAnalytics[key];
     if (!data || data.total === 0) return null;
 
@@ -404,19 +411,19 @@ const Dashboard = () => {
           <div className="glass-card rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Today's Progress</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Today's Progress</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                   </p>
                 </div>
               </div>
               <Link
                 to="/schedule"
-                className="px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition-colors"
+                className="px-4 py-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-200 font-medium hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
               >
                 View Schedule
               </Link>
@@ -427,7 +434,7 @@ const Dashboard = () => {
                 {todayProgress.slice(0, 5).map((item) => (
                   <div
                     key={item._id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       <div
@@ -437,10 +444,10 @@ const Dashboard = () => {
                         {getStatusIcon(item.status)}
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-800">
+                        <h4 className="font-medium text-gray-800 dark:text-gray-100">
                           {item.learningObjective?.title || 'Unknown Objective'}
                         </h4>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {item.learningObjective?.category || 'General'}
                         </p>
                       </div>
@@ -454,7 +461,7 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500 mb-4">No tasks scheduled for today</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">No tasks scheduled for today</p>
                 <Link
                   to="/schedule"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
@@ -554,28 +561,28 @@ const Dashboard = () => {
           <div className="space-y-3">
             <Link
               to="/objectives"
-              className="flex items-center gap-4 p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow"
+              className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
                 <Target className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-gray-800">Objectives</div>
-                <div className="text-sm text-gray-500">{objectives.length} active goals</div>
+                <div className="font-semibold text-gray-800 dark:text-gray-100">Objectives</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{objectives.length} active goals</div>
               </div>
               <ArrowRight className="w-5 h-5 text-gray-400" />
             </Link>
 
             <Link
               to="/schedule"
-              className="flex items-center gap-4 p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow"
+              className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-purple-600" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-gray-800">Schedule</div>
-                <div className="text-sm text-gray-500">Plan your week</div>
+                <div className="font-semibold text-gray-800 dark:text-gray-100">Schedule</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Plan your week</div>
               </div>
               <ArrowRight className="w-5 h-5 text-gray-400" />
             </Link>

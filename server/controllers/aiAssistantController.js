@@ -447,9 +447,12 @@ function generateIntelligentSchedule(prompt, studyHoursPerDay = 4, preferredTime
     });
   }
   
+  const uniqueSubjects = [...new Set(subjects)];
+  const subjectsLabel = uniqueSubjects.join(', ');
+
   return {
     schedule,
-    summary: `A balanced learning schedule focusing on ${subjects.join(', ')}. ${studyHoursPerDay} hours per day with flexible timing.`
+    summary: `Here's a ${studyHoursPerDay}-hour-per-day weekly plan focused on ${subjectsLabel}. It balances new concepts, practice, and review across the week so you can make steady progress without burning out.`
   };
 }
 
