@@ -13,6 +13,7 @@ import {
   BookOpen,
   FileText
 } from 'lucide-react';
+import { gsap } from 'gsap';
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -154,6 +155,20 @@ const Schedule = () => {
       setNotesForm({ notes: '' });
       setShowNotesModal(true);
       fetchData();
+
+      // Celebration animation on completion
+      gsap.fromTo(
+        `[data-objective-id="${objectiveId}"]`,
+        { scale: 0.95, boxShadow: '0 0 0 rgba(34,197,94,0)' },
+        {
+          scale: 1.02,
+          boxShadow: '0 0 40px rgba(34,197,94,0.6)',
+          duration: 0.4,
+          yoyo: true,
+          repeat: 1,
+          ease: 'power3.out',
+        }
+      );
     } catch (error) {
       toast.error('Failed to update progress');
     }
@@ -357,6 +372,7 @@ const Schedule = () => {
                   return (
                     <div
                       key={index}
+                      data-objective-id={objective._id}
                       className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-4">

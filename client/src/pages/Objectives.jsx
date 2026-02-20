@@ -76,7 +76,8 @@ const Objectives = () => {
   const fetchObjectives = async () => {
     try {
       setLoading(true);
-      const response = await objectivesAPI.getAll();
+      // Only show active objectives so soft-deleted ones disappear from the list
+      const response = await objectivesAPI.getAll({ isActive: true });
       setObjectives(response.data.data);
     } catch (error) {
       toast.error('Failed to fetch objectives');

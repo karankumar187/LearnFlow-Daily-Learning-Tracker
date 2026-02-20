@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { analyticsAPI, progressAPI, objectivesAPI } from '../services/api';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { gsap } from 'gsap';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -46,11 +47,41 @@ const Dashboard = () => {
   const [objectives, setObjectives] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate] = useState(new Date());
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [dailyAnalytics, setDailyAnalytics] = useState({});
+
+  const welcomeRef = useRef(null);
 
   useEffect(() => {
     fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    fetchCalendarAnalytics(calendarDate);
+  }, [calendarDate]);
+
+  useEffect(() => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    const lastPlayed = localStorage.getItem('learnflow:lastWelcomeAnimDate');
+    if (lastPlayed === todayKey || !welcomeRef.current) return;
+
+    localStorage.setItem('learnflow:lastWelcomeAnimDate', todayKey);
+
+    const elements = welcomeRef.current.querySelectorAll('[data-welcome-anim]');
+    if (!elements.length) return;
+
+    gsap.fromTo(
+      elements,
+      { opacity: 0, y: 16 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: 0.08,
+        ease: 'power3.out',
+      }
+    );
   }, []);
 
   const fetchDashboardData = async () => {
@@ -78,6 +109,21 @@ const Dashboard = () => {
     }
   };
 
+  const fetchCalendarAnalytics = async (date) => {
+    try {
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+      const res = await analyticsAPI.getDaily(month, year);
+      const map = {};
+      (res.data.data || []).forEach((day) => {
+        map[day.date] = day;
+      });
+      setDailyAnalytics(map);
+    } catch (error) {
+      console.error('Error fetching calendar analytics:', error);
+    }
+  };
+
   // Calendar functions
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -92,28 +138,65 @@ const Dashboard = () => {
     // Previous month days
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startingDay - 1; i >= 0; i--) {
-      days.push({ day: prevMonthLastDay - i, currentMonth: false });
+      const day = prevMonthLastDay - i;
+      days.push({
+        day,
+        currentMonth: false,
+        date: new Date(year, month - 1, day),
+      });
     }
     
     // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push({ day: i, currentMonth: true });
+      days.push({
+        day: i,
+        currentMonth: true,
+        date: new Date(year, month, i),
+      });
     }
     
     // Next month days
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
-      days.push({ day: i, currentMonth: false });
+      days.push({
+        day: i,
+        currentMonth: false,
+        date: new Date(year, month + 1, i),
+      });
     }
     
     return days;
   };
 
-  const isToday = (day) => {
+  const isToday = (dayItem) => {
     const today = new Date();
-    return day === today.getDate() && 
-           calendarDate.getMonth() === today.getMonth() && 
-           calendarDate.getFullYear() === today.getFullYear();
+    return (
+      dayItem.date.getDate() === today.getDate() &&
+      dayItem.date.getMonth() === today.getMonth() &&
+      dayItem.date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const getDayStatus = (dateObj) => {
+    const key = dateObj.toISOString().split('T')[0];
+    const data = dailyAnalytics[key];
+    if (!data || data.total === 0) return null;
+
+    const { completed, missed, pending, partial, total } = data;
+
+    if (completed === total && missed === 0 && pending === 0 && partial === 0) {
+      return 'success';
+    }
+
+    if (missed === total) {
+      return 'danger';
+    }
+
+    if (missed > 0) {
+      return 'warning';
+    }
+
+    return null;
   };
 
   const prevMonth = () => {
@@ -174,19 +257,19 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn" ref={welcomeRef}>
       {/* Welcome Section with Date */}
-      <div className="glass-card rounded-2xl p-6 bg-gradient-to-r from-indigo-500/10 to-purple-500/10">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-indigo-600 mb-2">
+      <div className="glass-card rounded-2xl p-6 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-slate-800/60 dark:to-slate-900/60">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4" data-welcome-anim>
+          <div data-welcome-anim>
+            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-300 mb-2">
               <Calendar className="w-5 h-5" />
               <span className="font-medium">{formatDate(currentDate)}</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Welcome back! 👋
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+              Welcome back!
             </h2>
-            <p className="text-gray-500 mt-1">
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
               Here's your learning progress for this week
             </p>
           </div>
@@ -379,12 +462,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Right Column - Calendar & Upcoming */}
+        {/* Right Column - Calendar & Incomplete */}
         <div className="space-y-6">
           {/* Calendar */}
           <div className="glass-card rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h3>
               <div className="flex gap-1">
@@ -399,42 +482,55 @@ const Dashboard = () => {
             
             <div className="calendar-grid">
               {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                <div key={day} className="text-center text-xs font-medium text-gray-400 py-2">
+                <div key={day} className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-2">
                   {day}
                 </div>
               ))}
-              {getDaysInMonth(calendarDate).map((item, index) => (
-                <div
-                  key={index}
-                  className={`calendar-day ${item.currentMonth ? '' : 'other-month'} ${isToday(item.day) ? 'today' : ''}`}
-                >
-                  {item.day}
-                </div>
-              ))}
+              {getDaysInMonth(calendarDate).map((item, index) => {
+                const status = getDayStatus(item.date);
+                const statusClass = status ? `calendar-day--${status}` : '';
+                return (
+                  <div
+                    key={index}
+                    className={`calendar-day ${item.currentMonth ? '' : 'other-month'} ${isToday(item) ? 'today' : ''} ${statusClass}`}
+                  >
+                    {item.day}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Upcoming Tasks */}
+          {/* Incomplete Tasks */}
           <div className="glass-card rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Upcoming</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Incomplete</h3>
               <MoreHorizontal className="w-5 h-5 text-gray-400" />
             </div>
             <div className="space-y-3">
-              {todayProgress.slice(0, 4).map((item, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                  <div 
-                    className="w-1 h-10 rounded-full"
-                    style={{ backgroundColor: item.learningObjective?.color || '#6366f1' }}
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-800">{item.learningObjective?.title}</p>
-                    <p className="text-xs text-gray-500">{item.learningObjective?.category}</p>
+              {todayProgress
+                .filter((item) => item.status !== 'completed')
+                .slice(0, 4)
+                .map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-slate-800">
+                    <div
+                      className="w-1 h-10 rounded-full"
+                      style={{ backgroundColor: item.learningObjective?.color || '#6366f1' }}
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-800 dark:text-gray-100">
+                        {item.learningObjective?.title}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.learningObjective?.category}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {todayProgress.length === 0 && (
-                <p className="text-center text-gray-400 py-4 text-sm">No upcoming tasks</p>
+                ))}
+              {todayProgress.filter((item) => item.status !== 'completed').length === 0 && (
+                <p className="text-center text-gray-400 dark:text-gray-500 py-4 text-sm">
+                  All of today's tasks are completed. 🎉
+                </p>
               )}
             </div>
           </div>

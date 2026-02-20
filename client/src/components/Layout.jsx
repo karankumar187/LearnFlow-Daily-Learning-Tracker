@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -20,6 +20,7 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [theme, setTheme] = useState('light');
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -27,6 +28,19 @@ const Layout = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('theme') || 'light';
+    setTheme(stored);
+    document.documentElement.classList.toggle('dark', stored === 'dark');
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('theme', next);
+    document.documentElement.classList.toggle('dark', next === 'dark');
   };
 
   const navItems = [
@@ -46,7 +60,7 @@ const Layout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -128,12 +142,12 @@ const Layout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-72 bg-white/90 backdrop-blur-xl border-r border-gray-200/60 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed left-0 top-0 h-full w-72 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-slate-800 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-100 dark:border-slate-800">
           <Link to="/dashboard" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
               <Target className="w-6 h-6 text-white" />
@@ -142,7 +156,7 @@ const Layout = () => {
               <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 LearnFlow
               </h1>
-              <p className="text-xs text-gray-500">Master Your Learning</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Master Your Learning</p>
             </div>
           </Link>
         </div>
@@ -161,7 +175,7 @@ const Layout = () => {
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   active
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-200'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${active ? 'text-white' : ''}`} />
@@ -177,15 +191,15 @@ const Layout = () => {
         </nav>
 
         {/* User Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-          <div className="bg-gray-50 rounded-xl p-4">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 dark:border-slate-800">
+          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
               </div>
             </div>
           </div>
@@ -195,7 +209,7 @@ const Layout = () => {
       {/* Main Content */}
       <div className="lg:ml-72 min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
+        <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-slate-800">
           <div className="flex items-center justify-between px-4 py-4 lg:px-8">
             <div className="flex items-center gap-4">
               <button
@@ -205,18 +219,24 @@ const Layout = () => {
                 <Menu className="w-5 h-5" />
               </button>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                   {navItems.find((item) => isActive(item.path))?.label || 'Dashboard'}
                 </h2>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className="px-2 py-1 rounded-full border border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                {theme === 'dark' ? 'Light' : 'Dark'}
+              </button>
               <button 
                 onClick={() => setShowNotifications(true)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
               >
-                <Bell className="w-5 h-5 text-gray-600" />
+                <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
               <button 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { aiAPI, scheduleAPI } from '../services/api';
+import { aiAPI, objectivesAPI } from '../services/api';
 import { toast } from 'sonner';
 import {
   Sparkles,
@@ -35,9 +35,14 @@ const AIAssistant = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [expandedDay, setExpandedDay] = useState(null);
   const [applying, setApplying] = useState(false);
+  const [tipsPrompt, setTipsPrompt] = useState('');
+  const [tipsLoading, setTipsLoading] = useState(false);
+  const [tipsResponse, setTipsResponse] = useState(null);
+  const [objectives, setObjectives] = useState([]);
 
   useEffect(() => {
     fetchSuggestions();
+    fetchObjectives();
   }, []);
 
   const fetchSuggestions = async () => {
@@ -46,6 +51,15 @@ const AIAssistant = () => {
       setSuggestions(response.data.data);
     } catch (error) {
       console.error('Error fetching suggestions:', error);
+    }
+  };
+
+  const fetchObjectives = async () => {
+    try {
+      const res = await objectivesAPI.getAll({ isActive: true });
+      setObjectives(res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching objectives for AI tips:', error);
     }
   };
 
@@ -71,6 +85,30 @@ const AIAssistant = () => {
       toast.error('Failed to generate schedule');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTipsSubmit = async (e) => {
+    e.preventDefault();
+    if (!tipsPrompt.trim()) {
+      toast.error('Please enter a question for suggestions');
+      return;
+    }
+
+    try {
+      setTipsLoading(true);
+      const response = await aiAPI.suggestSchedule({
+        prompt: tipsPrompt,
+        studyHoursPerDay: studyHours,
+        preferredTime,
+      });
+
+      setTipsResponse(response.data.data);
+      toast.success('AI suggestions generated!');
+    } catch (error) {
+      toast.error('Failed to generate suggestions');
+    } finally {
+      setTipsLoading(false);
     }
   };
 
@@ -123,7 +161,7 @@ const AIAssistant = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800">AI Learning Assistant</h2>
-            <p className="text-gray-500">Get personalized learning schedules powered by AI</p>
+            <p className="text-gray-500">Get personalized learning schedules and smart study suggestions</p>
           </div>
         </div>
 
@@ -140,10 +178,14 @@ const AIAssistant = () => {
             <Calendar className="w-4 h-4" />
             Time Optimized
           </span>
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-sm">
+            <BookOpen className="w-4 h-4" />
+            Tips from your objectives
+          </span>
         </div>
       </div>
 
-      {/* Input Form */}
+      {/* Schedule Generator */}
       <div className="glass-card rounded-xl p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -211,6 +253,101 @@ const AIAssistant = () => {
             )}
           </button>
         </form>
+      </div>
+
+      {/* Suggestions Only (no scheduling) */}
+      <div className="glass-card rounded-xl p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-amber-500" />
+              Ask for study suggestions
+            </h3>
+            <p className="text-sm text-gray-500">
+              Get ideas and strategies based on your current learning objectives. This will not create or apply any schedule.
+            </p>
+          </div>
+        </div>
+
+        {objectives.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {objectives.slice(0, 8).map((obj) => (
+              <button
+                key={obj._id}
+                type="button"
+                onClick={() =>
+                  setTipsPrompt((prev) =>
+                    prev
+                      ? `${prev}\nAlso consider my objective "${obj.title}" in ${obj.category}.`
+                      : `Give me suggestions to improve on "${obj.title}" in ${obj.category}.`
+                  )
+                }
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-gray-100 hover:bg-indigo-50 text-gray-700 transition-colors"
+              >
+                <BookOpen className="w-3 h-3" />
+                <span className="line-clamp-1">{obj.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={handleTipsSubmit} className="space-y-3">
+          <textarea
+            value={tipsPrompt}
+            onChange={(e) => setTipsPrompt(e.target.value)}
+            placeholder="Ask the AI for focused suggestions. For example: 'How can I better retain concepts from my data science objectives this week?'"
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all resize-none"
+          />
+          <button
+            type="submit"
+            disabled={tipsLoading || !tipsPrompt.trim()}
+            className="w-full py-2.5 px-4 rounded-xl bg-gray-900 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-70 hover:bg-black transition-all"
+          >
+            {tipsLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Thinking...
+              </>
+            ) : (
+              <>
+                <Lightbulb className="w-4 h-4" />
+                Get Suggestions Only
+              </>
+            )}
+          </button>
+        </form>
+
+        {tipsResponse && (
+          <div className="mt-6 space-y-3 border-t border-gray-100 pt-4">
+            <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+              Suggested weekly focus
+            </h4>
+            <p className="text-sm text-gray-600">{tipsResponse.summary}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              {Array.isArray(tipsResponse.schedule) &&
+                tipsResponse.schedule.slice(0, 4).map((day) => (
+                  <div key={day.day} className="p-3 rounded-lg bg-gray-50">
+                    <div className="font-medium capitalize mb-1">{day.day}</div>
+                    <ul className="space-y-1">
+                      {(day.items || []).slice(0, 2).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                          <div>
+                            <p className="font-medium text-gray-800 text-xs">
+                              {item.objectiveTitle}
+                            </p>
+                            <p className="text-xs text-gray-500">{item.description}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Generated Schedule */}
