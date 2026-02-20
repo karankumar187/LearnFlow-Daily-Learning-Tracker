@@ -142,8 +142,18 @@ const Schedule = () => {
     }
   };
 
+  const isTodayTab = () => {
+    const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    const todayName = days[todayIndex];
+    return selectedDay === todayName;
+  };
+
   const handleMarkComplete = async (objectiveId) => {
     try {
+      if (!isTodayTab()) {
+        toast.error('You can only complete objectives for today from this view.');
+        return;
+      }
       const today = new Date().toISOString().split('T')[0];
       const response = await progressAPI.createOrUpdate({
         learningObjectiveId: objectiveId,
@@ -199,6 +209,10 @@ const Schedule = () => {
 
   const handleSkip = async (objectiveId) => {
     try {
+      if (!isTodayTab()) {
+        toast.error('You can only skip objectives for today from this view.');
+        return;
+      }
       const today = new Date().toISOString().split('T')[0];
       await progressAPI.skip({
         learningObjectiveId: objectiveId,
@@ -215,6 +229,10 @@ const Schedule = () => {
 
   const handleMarkMissed = async (objectiveId) => {
     try {
+      if (!isTodayTab()) {
+        toast.error('You can only mark missed objectives for today from this view.');
+        return;
+      }
       const today = new Date().toISOString().split('T')[0];
       await progressAPI.createOrUpdate({
         learningObjectiveId: objectiveId,
@@ -233,6 +251,10 @@ const Schedule = () => {
   const getObjectiveById = (id) => objectives.find(o => o._id === id);
 
   const getProgressForObjective = (objectiveId) => {
+    const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    const todayName = days[todayIndex];
+    // Only show / use progress when viewing today's schedule
+    if (selectedDay !== todayName) return undefined;
     return todayProgress.find(p => p.learningObjective?._id === objectiveId);
   };
 
@@ -374,7 +396,7 @@ const Schedule = () => {
                     <div
                       key={index}
                       data-objective-id={objective._id}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 dark:bg-slate-900 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div

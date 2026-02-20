@@ -146,11 +146,14 @@ const AIAssistant = () => {
     if (!window.confirm('Are you sure you want to delete this suggestion?')) return;
 
     try {
+      // Optimistically update UI
+      setSuggestions((prev) => prev.filter((s) => s._id !== id));
       await aiAPI.deleteSuggestion(id);
       toast.success('Suggestion deleted');
-      fetchSuggestions();
     } catch (error) {
       toast.error('Failed to delete suggestion');
+      // Refetch to make sure UI reflects server state
+      fetchSuggestions();
     }
   };
 
