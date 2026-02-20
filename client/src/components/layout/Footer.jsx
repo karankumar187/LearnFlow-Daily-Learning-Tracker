@@ -2,12 +2,25 @@ import React, { useState } from 'react';
 import { Bug, MessageSquare, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { feedbackAPI } from '../../services/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 const Footer = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [feedbackType, setFeedbackType] = useState('feedback'); // 'bug' or 'feedback'
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useGSAP(() => {
+        gsap.to("footer", {
+            y: 0,
+            opacity: 1,
+            duration: 0.6,
+            delay: 0.8,
+            ease: "power2.out",
+            clearProps: "all"
+        });
+    }, []);
 
     const openModal = (type) => {
         setFeedbackType(type);
@@ -50,7 +63,7 @@ const Footer = () => {
 
     return (
         <>
-            <footer className="mt-auto py-6 px-4 lg:px-8 border-t border-gray-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <footer className="mt-auto py-6 px-4 lg:px-8 border-t border-gray-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm opacity-0 translate-y-5">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto">
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
