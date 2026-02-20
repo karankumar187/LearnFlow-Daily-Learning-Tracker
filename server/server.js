@@ -26,6 +26,7 @@ const progressRoutes = require('./routes/progress');
 const scheduleRoutes = require('./routes/schedules');
 const analyticsRoutes = require('./routes/analytics');
 const aiAssistantRoutes = require('./routes/aiAssistant');
+const feedbackRoutes = require('./routes/feedback');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -74,6 +75,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiAssistantRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

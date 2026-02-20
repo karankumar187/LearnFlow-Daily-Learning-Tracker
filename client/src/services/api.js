@@ -105,4 +105,9 @@ export const aiAPI = {
   chat: (data) => api.post('/ai/chat', data)
 };
 
+// Feedback APIs
+export const feedbackAPI = {
+  submit: (data) => api.post('/feedback', data)
+};
+
 export default api;

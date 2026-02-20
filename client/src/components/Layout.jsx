@@ -15,6 +15,7 @@ import {
   Bell,
   ChevronRight
 } from 'lucide-react';
+import Footer from './layout/Footer';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -100,7 +101,7 @@ const Layout = () => {
                   </div>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="w-full py-3 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
               >
@@ -142,9 +143,8 @@ const Layout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-72 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-slate-800 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed left-0 top-0 h-full w-72 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-slate-800 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-100 dark:border-slate-800">
@@ -172,11 +172,10 @@ const Layout = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  active
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${active
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-200'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <Icon className={`w-5 h-5 ${active ? 'text-white' : ''}`} />
                 <span className="font-medium">{item.label}</span>
@@ -232,14 +231,14 @@ const Layout = () => {
               >
                 {theme === 'dark' ? 'Light' : 'Dark'}
               </button>
-              <button 
+              <button
                 onClick={() => setShowNotifications(true)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <button 
+              <button
                 onClick={() => setShowSettings(true)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
@@ -250,9 +249,11 @@ const Layout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-8">
+        <main className="p-4 lg:p-8 flex-1">
           <Outlet />
         </main>
+
+        <Footer />
       </div>
     </div>
   );
