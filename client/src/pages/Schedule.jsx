@@ -209,20 +209,31 @@ const Schedule = () => {
 
       const d = new Date();
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      await progressAPI.createOrUpdate({
-        learningObjectiveId: selectedProgress.learningObjective?._id || selectedProgress.learningObjective,
-        date: today,
-        status: 'completed',
-        notes: notesForm.notes
-      });
 
-      toast.success('Notes saved!');
+      if (!notesForm.notes.trim()) {
+        // Auto-skip if input field is empty
+        await progressAPI.skip({
+          learningObjectiveId: selectedProgress.learningObjective?._id || selectedProgress.learningObjective,
+          date: today,
+          remarks: 'Skipped - no notes provided'
+        });
+        toast.success('Marked as skipped (no notes provided)');
+      } else {
+        await progressAPI.createOrUpdate({
+          learningObjectiveId: selectedProgress.learningObjective?._id || selectedProgress.learningObjective,
+          date: today,
+          status: 'completed',
+          notes: notesForm.notes
+        });
+        toast.success('Notes saved!');
+      }
+
       setShowNotesModal(false);
       setSelectedProgress(null);
       setNotesForm({ notes: '' });
       fetchData();
     } catch (error) {
-      toast.error('Failed to save notes');
+      toast.error('Failed to save');
     }
   };
 
@@ -469,12 +480,6 @@ const Schedule = () => {
                               Complete
                             </button>
                             <button
-                              onClick={() => handleSkip(objective._id)}
-                              className="px-3 py-1.5 rounded-lg bg-purple-100 text-purple-700 text-sm font-medium hover:bg-purple-200 transition-colors"
-                            >
-                              Skip
-                            </button>
-                            <button
                               onClick={() => handleRemoveItem(objective._id)}
                               className="p-2 rounded-lg hover:bg-red-50 transition-colors"
                             >
@@ -645,7 +650,7 @@ const Schedule = () => {
                 }}
                 className="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
               >
-                Skip
+                Cancel
               </button>
               <button
                 onClick={handleSaveNotes}
