@@ -45,7 +45,7 @@ const Login = () => {
             <LogoIcon className="w-10 h-10" color="white" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            LearnFlow
+            Avanza
           </h1>
           <p className="text-gray-500 mt-2">Master Your Learning Journey</p>
         </div>
