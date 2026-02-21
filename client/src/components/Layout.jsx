@@ -189,8 +189,8 @@ const Layout = () => {
         {/* Logo */}
         <div className="p-6 border-b border-gray-100 dark:border-slate-800">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-              <Target className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200 p-2">
+              <img src="/learnflow-logo.png" alt="LearnFlow" className="w-8 h-8 object-contain brightness-0 invert" />
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
