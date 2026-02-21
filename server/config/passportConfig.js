@@ -22,7 +22,8 @@ const setupPassport = () => {
         passport.use(new GoogleStrategy({
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: '/api/auth/google/callback'
+            callbackURL: '/api/auth/google/callback',
+            proxy: true // Trust reverse proxies (like Render) to correctly parse HTTPS in callback URLs
         }, async (accessToken, refreshToken, profile, done) => {
             try {
                 // Check if user already exists
@@ -40,74 +41,6 @@ const setupPassport = () => {
                     authProvider: 'google',
                     providerId: profile.id,
                     avatar: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : ''
-                });
-
-                return done(null, user);
-            } catch (error) {
-                return done(error, null);
-            }
-        }));
-    }
-
-    // GitHub Strategy
-    if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-        passport.use(new GitHubStrategy({
-            clientID: process.env.GITHUB_CLIENT_ID,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET,
-            callbackURL: '/api/auth/github/callback',
-            scope: ['user:email']
-        }, async (accessToken, refreshToken, profile, done) => {
-            try {
-                const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : `${profile.username}@github.com`;
-
-                let user = await User.findOne({ email });
-
-                if (user) {
-                    return done(null, user);
-                }
-
-                user = await User.create({
-                    name: profile.displayName || profile.username,
-                    email: email,
-                    authProvider: 'github',
-                    providerId: profile.id,
-                    avatar: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : ''
-                });
-
-                return done(null, user);
-            } catch (error) {
-                return done(error, null);
-            }
-        }));
-    }
-
-    // Apple Strategy
-    if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID) {
-        passport.use(new AppleStrategy({
-            clientID: process.env.APPLE_CLIENT_ID,
-            teamID: process.env.APPLE_TEAM_ID,
-            keyID: process.env.APPLE_KEY_ID,
-            privateKeyString: process.env.APPLE_PRIVATE_KEY,
-            callbackURL: '/api/auth/apple/callback'
-        }, async (accessToken, refreshToken, idToken, profile, done) => {
-            try {
-                const email = idToken.email; // Apple usually provides this in the token
-                if (!email) {
-                    return done(new Error('Apple auth failed to provide email'), null);
-                }
-
-                let user = await User.findOne({ email });
-
-                if (user) {
-                    return done(null, user);
-                }
-
-                user = await User.create({
-                    name: email.split('@')[0], // Apple minimizes data, sometimes name isn't reliably parsed
-                    email: email,
-                    authProvider: 'apple',
-                    providerId: idToken.sub,
-                    avatar: ''
                 });
 
                 return done(null, user);
