@@ -22,8 +22,6 @@ exports.createOrUpdateProgress = async (req, res, next) => {
     }
 
     const { learningObjectiveId, date, status, remarks, notes, timeSpent } = req.body;
-    const fs = require('fs');
-    fs.appendFileSync('progress_debug.log', `[createOrUpdate] Request for obj=${learningObjectiveId}, date=${date}, status=${status}\n`);
     console.log(`[createOrUpdate] Request for obj=${learningObjectiveId}, date=${date}, status=${status}`);
 
     // Verify the objective belongs to user
@@ -50,7 +48,6 @@ exports.createOrUpdateProgress = async (req, res, next) => {
         $lte: progressDateEnd
       }
     });
-    fs.appendFileSync('progress_debug.log', `[createOrUpdate] Found existing progress? ${!!progress} (ID: ${progress?._id})\n`);
     console.log(`[createOrUpdate] Found existing progress? ${!!progress} (ID: ${progress?._id})`);
 
     const updateData = {
@@ -103,7 +100,6 @@ exports.createOrUpdateProgress = async (req, res, next) => {
         .populate('learningObjective', 'title color icon category');
     }
 
-    fs.appendFileSync('progress_debug.log', `[createOrUpdate] Returning saved status: ${progress.status}\n`);
     console.log(`[createOrUpdate] Returning saved status: ${progress.status}`);
 
     // --- Notification triggers for completed tasks ---

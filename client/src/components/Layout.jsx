@@ -58,6 +58,20 @@ const Layout = () => {
     }
   }, [user]);
 
+  // Poll for new notifications every 30 seconds
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Re-fetch when notification panel is opened
+  useEffect(() => {
+    if (showNotifications && user) {
+      fetchNotifications();
+    }
+  }, [showNotifications]);
+
   const handleMarkRead = async (id, read) => {
     if (read) return; // Already read
 
