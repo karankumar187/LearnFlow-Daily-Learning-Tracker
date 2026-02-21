@@ -201,8 +201,8 @@ const Analytics = () => {
         <div className="stagger-item glass-card rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gray-200 flex items-center justify-center shadow-lg shadow-orange-200">
-                <Flame className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: '#FDEBD0' }}>
+                <Flame className="w-7 h-7" style={{ color: '#D97706' }} />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">
