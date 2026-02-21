@@ -49,9 +49,10 @@ const Layout = () => {
   const fetchNotifications = async () => {
     try {
       const res = await notificationsAPI.getAll();
-      setNotifications(res.data.data);
+      setNotifications(res.data?.data || []);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      setNotifications([]);
     }
   };
 
@@ -84,7 +85,7 @@ const Layout = () => {
     { path: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
   ];
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = (notifications || []).filter(n => !n?.read).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
@@ -150,7 +151,7 @@ const Layout = () => {
               </button>
             </div>
             <div className="space-y-3 max-h-80 overflow-auto">
-              {notifications.length === 0 ? (
+              {(!notifications || notifications.length === 0) ? (
                 <div className="text-center text-sm text-gray-500 py-4">No notifications yet</div>
               ) : (
                 notifications.map((notif) => (
@@ -165,7 +166,7 @@ const Layout = () => {
                         <p className={`text-sm ${notif.read ? 'font-medium text-gray-600' : 'font-semibold text-gray-800'}`}>{notif.title}</p>
                         <p className={`text-xs mt-0.5 ${notif.read ? 'text-gray-500' : 'text-gray-600'}`}>{notif.message}</p>
                         <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-                          {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                          {notif.createdAt ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true }) : 'Just now'}
                         </p>
                       </div>
                     </div>
