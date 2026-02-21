@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
+const passport = require('passport');
+const session = require('express-session');
 
 // Security packages
 const helmet = require('helmet');
@@ -43,6 +45,21 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Express Session
+app.use(session({
+  secret: process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // CORS
 app.use(cors({
@@ -120,6 +137,9 @@ const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => {
     console.log('Database connected');
+
+    // Setup Passport strategies
+    require('./config/passportConfig')();
 
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

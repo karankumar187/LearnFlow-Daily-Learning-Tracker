@@ -14,6 +14,7 @@ import Analytics from './pages/Analytics';
 import AIAssistant from './pages/AIAssistant';
 import Notes from './pages/Notes';
 import Layout from './components/Layout';
+import OAuthCallback from './pages/OAuthCallback';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -65,6 +66,15 @@ function App() {
             element={
               <PublicRoute>
                 <Register />
+              </PublicRoute>
+            }
+          />
+
+          <Route
+            path="/oauth-callback"
+            element={
+              <PublicRoute>
+                <OAuthCallback />
               </PublicRoute>
             }
           />

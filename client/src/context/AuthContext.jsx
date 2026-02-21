@@ -32,10 +32,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login({ email, password });
       const { token, user } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       setUser(user);
       setIsAuthenticated(true);
       toast.success('Login successful!');
@@ -47,14 +47,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithToken = async (token) => {
+    try {
+      localStorage.setItem('token', token);
+      await checkAuth(); // Will fetch user profile based on new token
+      return { success: true };
+    } catch (error) {
+      localStorage.removeItem('token');
+      return { success: false, error: 'Failed to authenticate with token' };
+    }
+  };
+
   const register = async (name, email, password) => {
     try {
       const response = await authAPI.register({ name, email, password });
       const { token, user } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       setUser(user);
       setIsAuthenticated(true);
       toast.success('Registration successful!');
@@ -94,6 +105,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         loading,
         login,
+        loginWithToken,
         register,
         logout,
         updateProfile
