@@ -527,3 +527,59 @@ exports.cleanupPhantomProgress = async (req, res, next) => {
     next(error);
   }
 };
+
+// Status priority for dedup: keep the most meaningful record
+const STATUS_PRIORITY = { completed: 5, partial: 4, skipped: 3, missed: 2, pending: 1 };
+
+// @desc    Deduplicate progress records — keep best record per (user, objective, date)
+// @route   DELETE /api/analytics/dedup
+// @access  Private
+exports.dedupProgress = async (req, res, next) => {
+  try {
+    // Find all groups with more than one entry for the same user+objective+day
+    const duplicates = await DailyProgress.aggregate([
+      { $match: { user: req.user._id } },
+      {
+        $group: {
+          _id: {
+            learningObjective: '$learningObjective',
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } }
+          },
+          count: { $sum: 1 },
+          ids: { $push: '$_id' }
+        }
+      },
+      { $match: { count: { $gt: 1 } } }
+    ]);
+
+    let totalDeleted = 0;
+
+    for (const group of duplicates) {
+      const records = await DailyProgress.find({ _id: { $in: group.ids } });
+
+      // Sort: best status first, then highest timeSpent
+      records.sort((a, b) => {
+        const aPri = STATUS_PRIORITY[a.status] || 0;
+        const bPri = STATUS_PRIORITY[b.status] || 0;
+        if (bPri !== aPri) return bPri - aPri;
+        return (b.timeSpent || 0) - (a.timeSpent || 0);
+      });
+
+      // Keep first (best), delete the rest
+      const [, ...remove] = records;
+      if (remove.length > 0) {
+        await DailyProgress.deleteMany({ _id: { $in: remove.map(r => r._id) } });
+        totalDeleted += remove.length;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Removed ${totalDeleted} duplicate progress records.`,
+      deleted: totalDeleted,
+      duplicateGroups: duplicates.length
+    });
+  } catch (error) {
+    next(error);
+  }
+};
