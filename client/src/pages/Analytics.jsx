@@ -231,7 +231,7 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                 <XAxis dataKey="day" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis yAxisId="left" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="right" orientation="right" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="right" orientation="right" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => formatTime(v)} />
                 <Tooltip
                   contentStyle={{
                     background: 'white',
@@ -239,10 +239,16 @@ const Analytics = () => {
                     borderRadius: '8px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
+                  formatter={(value, name) => {
+                    if (name === 'Time') {
+                      return [formatTime(value), 'Time Spent'];
+                    }
+                    return [value, name];
+                  }}
                 />
-                <Bar yAxisId="left" dataKey="completed" fill="#10b981" radius={[4, 4, 0, 0]} name="Completed" />
-                <Bar yAxisId="left" dataKey="missed" fill="#ef4444" radius={[4, 4, 0, 0]} name="Missed" />
-                <Line yAxisId="right" type="monotone" dataKey="timeSpent" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="Time (hrs)" />
+                <Bar yAxisId="left" dataKey="completed" fill="#52B788" radius={[4, 4, 0, 0]} name="Completed" />
+                <Bar yAxisId="left" dataKey="missed" fill="#EF4444" radius={[4, 4, 0, 0]} name="Missed" />
+                <Line yAxisId="right" type="monotone" dataKey="timeSpentMinutes" stroke="#D97706" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="Time" />
               </ComposedChart>
             </ResponsiveContainer>
           </div>

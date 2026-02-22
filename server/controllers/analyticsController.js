@@ -347,7 +347,8 @@ exports.getWeeklyChartData = async (req, res, next) => {
         pending: dayProgress.filter(p => p.status === 'pending').length,
         partial: dayProgress.filter(p => p.status === 'partial').length,
         total: dayProgress.length,
-        timeSpent: Math.round(dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) / 60) // convert to hours for chart readability
+        timeSpent: parseFloat((dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) / 60).toFixed(2)), // precise decimal hours for chart
+        timeSpentMinutes: dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) // raw minutes for tooltip formatting
       };
     });
 
