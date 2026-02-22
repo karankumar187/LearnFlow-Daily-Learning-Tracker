@@ -6,6 +6,21 @@ const syncProgress = require('../utils/syncProgress');
 
 const TIMEZONE = 'Asia/Kolkata';
 
+/**
+ * Returns the start-of-day date for when the user first created a schedule.
+ * All analytics queries use this as a $gte floor so phantom entries from
+ * before schedule setup are never counted.
+ */
+const getScheduleStartDate = async (userId) => {
+  const schedule = await Schedule.findOne(
+    { user: userId, isActive: true },
+    { createdAt: 1 },
+    { sort: { createdAt: 1 } }  // oldest first
+  );
+  if (!schedule) return null;
+  return moment.tz(schedule.createdAt, TIMEZONE).startOf('day').toDate();
+};
+
 // @desc    Get overall analytics
 // @route   GET /api/analytics/overall
 // @access  Private
@@ -42,10 +57,20 @@ exports.getOverallAnalytics = async (req, res, next) => {
     // Sync before fetching analytics
     await syncProgress(req.user.id);
 
+    // Never show data from before the schedule was created
+    const scheduleStart = await getScheduleStartDate(req.user.id);
+
     // Get all progress for the period
     const query = { user: req.user.id };
     if (Object.keys(dateFilter).length > 0) {
       query.date = dateFilter.date;
+      // Clamp lower bound to schedule creation date
+      if (scheduleStart && (!query.date.$gte || scheduleStart > query.date.$gte)) {
+        query.date.$gte = scheduleStart;
+      }
+    } else if (scheduleStart) {
+      // 'all' period — floor at schedule creation
+      query.date = { $gte: scheduleStart };
     }
 
     const progress = await DailyProgress.find(query);
@@ -86,18 +111,25 @@ exports.getAnalyticsByObjective = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
 
+    // Sync before fetching
+    await syncProgress(req.user.id);
+
+    // Never show data from before the schedule was created
+    const scheduleStart = await getScheduleStartDate(req.user.id);
+
     let dateFilter = {};
     if (startDate && endDate) {
+      const fromDate = moment.tz(startDate, TIMEZONE).startOf('day').toDate();
       dateFilter = {
         date: {
-          $gte: moment.tz(startDate, TIMEZONE).startOf('day').toDate(),
+          // clamp lower bound to scheduleStart
+          $gte: scheduleStart && scheduleStart > fromDate ? scheduleStart : fromDate,
           $lte: moment.tz(endDate, TIMEZONE).endOf('day').toDate()
         }
       };
+    } else if (scheduleStart) {
+      dateFilter = { date: { $gte: scheduleStart } };
     }
-
-    // Sync before fetching
-    await syncProgress(req.user.id);
 
     // Get all active objectives
     const objectives = await LearningObjective.find({
@@ -322,10 +354,13 @@ exports.getWeeklyChartData = async (req, res, next) => {
     // Sync before fetching
     await syncProgress(req.user.id);
 
+    // Never count data from before the schedule was created
+    const scheduleStart = await getScheduleStartDate(req.user.id);
+
     const progress = await DailyProgress.find({
       user: req.user.id,
       date: {
-        $gte: startOfWeek.toDate(),
+        $gte: scheduleStart && scheduleStart > startOfWeek.toDate() ? scheduleStart : startOfWeek.toDate(),
         $lte: endOfWeek.toDate()
       }
     });
@@ -334,6 +369,11 @@ exports.getWeeklyChartData = async (req, res, next) => {
     const chartData = days.map((day, index) => {
       const dayStart = startOfWeek.clone().add(index, 'days').startOf('day');
       const dayEnd = startOfWeek.clone().add(index, 'days').endOf('day');
+
+      // Zero out days that occurred before the schedule was created
+      if (scheduleStart && dayEnd.toDate() < scheduleStart) {
+        return { day, completed: 0, missed: 0, pending: 0, partial: 0, total: 0, timeSpent: 0, timeSpentMinutes: 0 };
+      }
 
       const dayProgress = progress.filter(p => {
         const pDate = moment.tz(p.date, TIMEZONE);
@@ -347,8 +387,8 @@ exports.getWeeklyChartData = async (req, res, next) => {
         pending: dayProgress.filter(p => p.status === 'pending').length,
         partial: dayProgress.filter(p => p.status === 'partial').length,
         total: dayProgress.length,
-        timeSpent: parseFloat((dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) / 60).toFixed(2)), // precise decimal hours for chart
-        timeSpentMinutes: dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) // raw minutes for tooltip formatting
+        timeSpent: parseFloat((dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) / 60).toFixed(2)),
+        timeSpentMinutes: dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0)
       };
     });
 
@@ -368,18 +408,24 @@ exports.getCategoryAnalytics = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
 
+    // Sync before fetching
+    await syncProgress(req.user.id);
+
+    // Never count data from before the schedule was created
+    const scheduleStart = await getScheduleStartDate(req.user.id);
+
     let dateFilter = {};
     if (startDate && endDate) {
+      const fromDate = moment.tz(startDate, TIMEZONE).startOf('day').toDate();
       dateFilter = {
         date: {
-          $gte: moment.tz(startDate, TIMEZONE).startOf('day').toDate(),
+          $gte: scheduleStart && scheduleStart > fromDate ? scheduleStart : fromDate,
           $lte: moment.tz(endDate, TIMEZONE).endOf('day').toDate()
         }
       };
+    } else if (scheduleStart) {
+      dateFilter = { date: { $gte: scheduleStart } };
     }
-
-    // Sync before fetching
-    await syncProgress(req.user.id);
 
     // Get all objectives with their categories
     const objectives = await LearningObjective.find({
@@ -444,6 +490,37 @@ exports.getCategoryAnalytics = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: categoryAnalytics
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete phantom DailyProgress records created before first schedule
+// @route   DELETE /api/analytics/cleanup-phantom
+// @access  Private
+exports.cleanupPhantomProgress = async (req, res, next) => {
+  try {
+    const scheduleStart = await getScheduleStartDate(req.user.id);
+
+    if (!scheduleStart) {
+      return res.status(200).json({
+        success: true,
+        message: 'No schedule found — nothing to clean up.',
+        deleted: 0
+      });
+    }
+
+    const result = await DailyProgress.deleteMany({
+      user: req.user.id,
+      date: { $lt: scheduleStart }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Removed ${result.deletedCount} phantom progress records from before your schedule was created.`,
+      deleted: result.deletedCount,
+      scheduleStartDate: scheduleStart
     });
   } catch (error) {
     next(error);
