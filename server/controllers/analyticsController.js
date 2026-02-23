@@ -195,6 +195,7 @@ exports.getDailyAnalytics = async (req, res, next) => {
         missed: 0,
         pending: 0,
         partial: 0,
+        skipped: 0,
         entries: []
       };
     }

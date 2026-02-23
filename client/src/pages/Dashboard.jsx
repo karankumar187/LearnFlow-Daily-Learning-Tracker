@@ -206,11 +206,16 @@ const Dashboard = () => {
     const data = dailyAnalytics[key];
     if (!data || data.total === 0) return null;
 
-    const { completed, missed, pending, partial, total } = data;
+    const { completed, missed, pending, partial, total, skipped = 0 } = data;
 
-    // All completed
-    if (completed === total && missed === 0 && pending === 0 && partial === 0) {
+    // All completed or intentionally skipped
+    if (completed > 0 && (completed + skipped) === total && missed === 0 && pending === 0 && partial === 0) {
       return 'success';
+    }
+
+    // No completed tasks, but all skipped (edge case, not really a "success")
+    if (skipped === total && total > 0) {
+      return 'warning';
     }
 
     // All missed

@@ -52,9 +52,26 @@ const syncProgress = async (userId, daysToLookBack = 7) => {
             const endOfWeek = today.clone().endOf('week');
             const daysLookAhead = endOfWeek.diff(today, 'days');
 
+            const scheduleCreatedAtDate = schedule.createdAt
+                ? moment.tz(schedule.createdAt, TIMEZONE).startOf('day')
+                : moment.tz(TIMEZONE).subtract(30, 'days').startOf('day');
+
+            // --- AUTO-HEAL: Delete any 'missed' tasks erroneously generated before the schedule existed ---
+            await DailyProgress.deleteMany({
+                user: userId,
+                status: 'missed',
+                date: { $lt: scheduleCreatedAtDate.toDate() }
+            });
+
             // 2. Loop through recent days and backfill/forward-fill missing records
             for (let i = daysToLookBack; i >= -daysLookAhead; i--) {
                 const targetDate = moment.tz(TIMEZONE).subtract(i, 'days').startOf('day');
+
+                // Do not create or expect tasks for days before the schedule even existed
+                if (targetDate.isBefore(scheduleCreatedAtDate)) {
+                    continue;
+                }
+
                 const targetDayName = weekDaysMap[targetDate.day()];
 
                 const daySchedule = schedule.weeklySchedule.find(s => s.day === targetDayName);
