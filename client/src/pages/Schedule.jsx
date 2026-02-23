@@ -302,10 +302,10 @@ const Schedule = () => {
               <button
                 key={schedule._id}
                 onClick={() => setSelectedSchedule(schedule)}
-                className={`px - 4 py - 2 rounded - lg font - medium transition - all ${selectedSchedule?._id === schedule._id
-                    ? 'bg-green-700 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  } `}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedSchedule?._id === schedule._id
+                  ? 'bg-green-700 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {schedule.name}
                 {schedule.isDefault && (
@@ -346,10 +346,10 @@ const Schedule = () => {
                 <button
                   key={day}
                   onClick={() => setSelectedDay(day)}
-                  className={`px - 4 py - 2 rounded - lg font - medium capitalize transition - all ${selectedDay === day
-                      ? 'bg-gray-800 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } `}
+                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-all ${selectedDay === day
+                    ? 'bg-gray-800 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                 >
                   {day}
                 </button>
@@ -391,13 +391,14 @@ const Schedule = () => {
 
                   return (
                     <div
-                      key={`${item._id} -${index} `}
+                      key={`${item._id}-${index}`}
                       data-objective-id={objectiveId}
-                      className="stagger-item flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-slate-700"
+                      onClick={() => objective.url ? window.open(objective.url, '_blank') : null}
+                      className={`stagger-item flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-slate-700 ${objective.url ? 'cursor-pointer' : ''}`}
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className="w-12 h-12 rounded-lg flex items-center justify-center"
+                          className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
                           style={{ backgroundColor: objective.color + '20' }}
                         >
                           <BookOpen className="w-5 h-5" style={{ color: objective.color }} />
@@ -432,7 +433,7 @@ const Schedule = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         {progress?.status === 'completed' && (
                           <div className="flex items-center gap-2">
                             <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-sm font-medium">
