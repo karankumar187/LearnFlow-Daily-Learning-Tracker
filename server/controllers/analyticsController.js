@@ -50,12 +50,42 @@ exports.getOverallAnalytics = async (req, res, next) => {
 
     const progress = await DailyProgress.find(query);
 
-    // Calculate statistics
-    const total = progress.length;
+    // Fetch user schedule to dynamically calculate future expected tasks
+    const schedule = await Schedule.findOne({
+      user: req.user.id,
+      isDefault: true,
+      isActive: true
+    });
+
+    let total = progress.length;
     const completed = progress.filter(p => p.status === 'completed').length;
     const missed = progress.filter(p => p.status === 'missed').length;
-    const pending = progress.filter(p => p.status === 'pending').length;
+    let pending = progress.filter(p => p.status === 'pending').length;
     const partial = progress.filter(p => p.status === 'partial').length;
+
+    // Add future scheduled tasks for period views (weekly/monthly)
+    if (schedule && schedule.weeklySchedule && Object.keys(dateFilter).length > 0) {
+      const { $gte: start, $lte: end } = dateFilter.date;
+      const startDate = moment.tz(start, TIMEZONE);
+      const endDate = moment.tz(end, TIMEZONE);
+      const weekDaysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+      let curr = startDate.clone().startOf('day');
+      const todayStart = now.clone().startOf('day');
+
+      while (curr.isSameOrBefore(endDate)) {
+        if (curr.isAfter(todayStart)) {
+          const dayName = weekDaysMap[curr.day()];
+          const daySchedule = schedule.weeklySchedule.find(s => s.day === dayName);
+          if (daySchedule && daySchedule.isActive && daySchedule.items) {
+            const itemsCount = daySchedule.items.filter(i => i.learningObjective).length;
+            total += itemsCount;
+            pending += itemsCount;
+          }
+        }
+        curr.add(1, 'day');
+      }
+    }
 
     const completionRate = total > 0 ? ((completed / total) * 100).toFixed(2) : 0;
     const totalTimeSpent = progress.reduce((sum, p) => sum + (p.timeSpent || 0), 0);
@@ -186,15 +216,39 @@ exports.getDailyAnalytics = async (req, res, next) => {
     // Group by date
     const dailyData = {};
 
+    // Fetch schedule to fill in future days
+    const schedule = await Schedule.findOne({
+      user: req.user.id,
+      isDefault: true,
+      isActive: true
+    });
+    const now = moment.tz(TIMEZONE).startOf('day');
+    const weekDaysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
     // Initialize all days of the month
     for (let day = 1; day <= endOfMonth.date(); day++) {
-      const dateKey = moment.tz({ year: targetYear, month: targetMonth, day }, TIMEZONE).format('YYYY-MM-DD');
+      const currDate = moment.tz({ year: targetYear, month: targetMonth, day }, TIMEZONE);
+      const dateKey = currDate.format('YYYY-MM-DD');
+
+      let dayTotal = 0;
+      let dayPending = 0;
+
+      // If it's a future day, populate expected tasks from schedule
+      if (currDate.isAfter(now) && schedule && schedule.weeklySchedule) {
+        const daySchedule = schedule.weeklySchedule.find(s => s.day === weekDaysMap[currDate.day()]);
+        if (daySchedule && daySchedule.isActive && daySchedule.items) {
+          const itemsCount = daySchedule.items.filter(i => i.learningObjective).length;
+          dayTotal = itemsCount;
+          dayPending = itemsCount;
+        }
+      }
+
       dailyData[dateKey] = {
         date: dateKey,
-        total: 0,
+        total: dayTotal,
         completed: 0,
         missed: 0,
-        pending: 0,
+        pending: dayPending,
         partial: 0,
         skipped: 0,
         entries: []
@@ -332,7 +386,15 @@ exports.getWeeklyChartData = async (req, res, next) => {
       }
     });
 
+    const schedule = await Schedule.findOne({
+      user: req.user.id,
+      isDefault: true,
+      isActive: true
+    });
+
+    const weekDaysMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
     const chartData = days.map((day, index) => {
       const dayStart = startOfWeek.clone().add(index, 'days').startOf('day');
       const dayEnd = startOfWeek.clone().add(index, 'days').endOf('day');
@@ -342,13 +404,26 @@ exports.getWeeklyChartData = async (req, res, next) => {
         return pDate.isBetween(dayStart, dayEnd, null, '[]');
       });
 
+      let dayTotal = dayProgress.length;
+      let dayPending = dayProgress.filter(p => p.status === 'pending').length;
+
+      // If it's a future day, inject expected metrics from schedule
+      if (dayStart.isAfter(now.clone().startOf('day')) && schedule && schedule.weeklySchedule) {
+        const daySchedule = schedule.weeklySchedule.find(s => s.day === weekDaysMap[dayStart.day()]);
+        if (daySchedule && daySchedule.isActive && daySchedule.items) {
+          const itemsCount = daySchedule.items.filter(i => i.learningObjective).length;
+          dayTotal = itemsCount;
+          dayPending = itemsCount;
+        }
+      }
+
       return {
         day,
         completed: dayProgress.filter(p => p.status === 'completed').length,
         missed: dayProgress.filter(p => p.status === 'missed').length,
-        pending: dayProgress.filter(p => p.status === 'pending').length,
+        pending: dayPending,
         partial: dayProgress.filter(p => p.status === 'partial').length,
-        total: dayProgress.length,
+        total: dayTotal,
         timeSpent: parseFloat((dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) / 60).toFixed(2)), // precise decimal hours for chart
         timeSpentMinutes: dayProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) // raw minutes for tooltip formatting
       };
