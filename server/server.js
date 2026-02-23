@@ -20,7 +20,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Import DB connection
 const connectDB = require('./config/db');
-const dedupProgress = require('./utils/dedupProgress');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -49,15 +48,15 @@ const app = express();
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Session secret: prefer SESSION_SECRET, fall back to JWT_SECRET; warn loudly if neither is set
-const SESSION_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'avanza_dev_fallback_change_in_prod';
-if (!process.env.SESSION_SECRET && !process.env.JWT_SECRET) {
-  console.warn('[WARNING] Neither SESSION_SECRET nor JWT_SECRET is set. Using insecure fallback — set env vars in production!');
+// Guard: crash loudly if session secret is missing in production
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET && !process.env.JWT_SECRET) {
+  console.error('FATAL: SESSION_SECRET or JWT_SECRET env var is required in production.');
+  process.exit(1);
 }
 
 // Express Session
 app.use(session({
-  secret: SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -128,7 +127,8 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    timezone: 'Asia/Kolkata (IST)'
   });
 });
 
@@ -159,11 +159,8 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 connectDB()
-  .then(async () => {
+  .then(() => {
     console.log('Database connected');
-
-    // Clean up any duplicate DailyProgress entries before unique index applies
-    await dedupProgress();
 
     // Setup Passport strategies
     require('./config/passportConfig')();
@@ -355,6 +352,18 @@ async function sendIncompleteTaskReminder(timeOfDay) {
 
   // Create a notification for each user
   for (const [userId, tasks] of Object.entries(userMap)) {
+    // Check if an unread reminder already exists today
+    const existingReminder = await Notification.findOne({
+      user: userId,
+      title: { $in: ['Pending Tasks Reminder', 'Late Night Reminder', 'Evening Reminder'] },
+      read: false,
+      createdAt: { $gte: todayStart, $lte: todayEnd }
+    });
+
+    if (existingReminder) {
+      continue; // Don't spam the user if they already have an unread reminder today
+    }
+
     const taskCount = tasks.length;
     const taskList = tasks.slice(0, 3).join(', ');
     const extra = taskCount > 3 ? ` and ${taskCount - 3} more` : '';
