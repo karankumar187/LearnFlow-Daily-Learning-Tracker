@@ -52,9 +52,7 @@ const syncProgress = async (userId, daysToLookBack = 7) => {
 
             const daySchedule = schedule.weeklySchedule.find(s => s.day === targetDayName);
 
-            if (!daySchedule || !daySchedule.isActive || daySchedule.items.length === 0) {
-                continue;
-            }
+            const items = (daySchedule && daySchedule.isActive && daySchedule.items) ? daySchedule.items : [];
 
             // Fetch all progress for this user on this day
             const existingProgress = await DailyProgress.find({
@@ -65,15 +63,17 @@ const syncProgress = async (userId, daysToLookBack = 7) => {
                 }
             });
 
-            const scheduledObjectiveIds = daySchedule.items.map(i => i.learningObjective.toString());
-            const existingObjectiveIds = existingProgress.map(p => p.learningObjective.toString());
+            const scheduledObjectiveIds = items.map(i => i.learningObjective ? i.learningObjective.toString() : null).filter(Boolean);
+            const existingObjectiveIds = existingProgress.map(p => p.learningObjective ? p.learningObjective.toString() : null).filter(Boolean);
 
             // 2a. Delete 'pending' or 'missed' records that are NO LONGER in the schedule for this day
+            // Also cleans up any DailyProgress completely missing a learningObjective reference
             const orphanedProgressIds = existingProgress
-                .filter(p =>
-                    (p.status === 'pending' || p.status === 'missed') &&
-                    !scheduledObjectiveIds.includes(p.learningObjective.toString())
-                )
+                .filter(p => {
+                    if (p.status !== 'pending' && p.status !== 'missed') return false;
+                    if (!p.learningObjective) return true; // clean up dead references
+                    return !scheduledObjectiveIds.includes(p.learningObjective.toString());
+                })
                 .map(p => p._id);
 
             if (orphanedProgressIds.length > 0) {
@@ -82,7 +82,9 @@ const syncProgress = async (userId, daysToLookBack = 7) => {
 
             const recordsToCreate = [];
 
-            for (const item of daySchedule.items) {
+            for (const item of items) {
+                if (!item.learningObjective) continue;
+
                 const objectiveId = item.learningObjective.toString();
                 if (!existingObjectiveIds.includes(objectiveId)) {
                     // Task was scheduled but no record exists yet
