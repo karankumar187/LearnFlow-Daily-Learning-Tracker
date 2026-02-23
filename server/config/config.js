@@ -3,6 +3,7 @@ module.exports = {
   JWT_EXPIRE: process.env.JWT_EXPIRE || '7d',
   PORT: process.env.PORT || 5000,
   NODE_ENV: process.env.NODE_ENV || 'development',
-  HUGGINGFACE_API  MONGO_URI: process.env.MONGO_URI,
+  HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY,
+  MONGO_URI: process.env.MONGO_URI,
   TIMEZONE: 'UTC'
 };
