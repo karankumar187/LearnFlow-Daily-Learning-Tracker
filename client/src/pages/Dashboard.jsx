@@ -32,7 +32,10 @@ import {
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-
+function getTodayInIST() {
+  const istString = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+  return new Date(istString);
+}
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -78,7 +81,8 @@ const Dashboard = () => {
   }, [calendarDate]);
 
   useEffect(() => {
-    const todayKey = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const todayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const lastPlayed = localStorage.getItem('learnflow:lastWelcomeAnimDate');
     if (lastPlayed === todayKey || !welcomeRef.current) return;
 
@@ -127,8 +131,8 @@ const Dashboard = () => {
 
   const fetchCalendarAnalytics = async (date) => {
     try {
-      const month = date.getUTCMonth() + 1;
-      const year = date.getUTCFullYear();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
       const res = await analyticsAPI.getDaily(month, year);
       const map = {};
       (res.data.data || []).forEach((day) => {
@@ -142,23 +146,23 @@ const Dashboard = () => {
 
   // Calendar functions
   const getDaysInMonth = (date) => {
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const firstDay = new Date(Date.UTC(year, month, 1));
-    const lastDay = new Date(Date.UTC(year, month + 1, 0));
-    const daysInMonth = lastDay.getUTCDate();
-    const startingDay = firstDay.getUTCDay();
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDay = firstDay.getDay();
 
     const days = [];
 
     // Previous month days
-    const prevMonthLastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startingDay - 1; i >= 0; i--) {
       const day = prevMonthLastDay - i;
       days.push({
         day,
         currentMonth: false,
-        date: new Date(Date.UTC(year, month - 1, day)),
+        date: new Date(year, month - 1, day),
       });
     }
 
@@ -167,7 +171,7 @@ const Dashboard = () => {
       days.push({
         day: i,
         currentMonth: true,
-        date: new Date(Date.UTC(year, month, i)),
+        date: new Date(year, month, i),
       });
     }
 
@@ -177,7 +181,7 @@ const Dashboard = () => {
       days.push({
         day: i,
         currentMonth: false,
-        date: new Date(Date.UTC(year, month + 1, i)),
+        date: new Date(year, month + 1, i),
       });
     }
 
@@ -186,15 +190,14 @@ const Dashboard = () => {
 
   const isToday = (dayItem) => {
     if (!dayItem?.date) return false;
-    const todayISO = new Date().toISOString().split('T')[0];
-    const itemISO = dayItem.date.toISOString().split('T')[0];
-    return todayISO === itemISO;
+    const today = getTodayInIST();
+    return dayItem.date.toDateString() === today.toDateString();
   };
 
   const getDayStatus = (dateObj) => {
-    // Build date key in the same timezone as analytics (UTC)
+    // Build date key in the same timezone as analytics (Asia/Kolkata)
     const istFormatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'UTC',
+      timeZone: 'Asia/Kolkata',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -229,11 +232,11 @@ const Dashboard = () => {
   };
 
   const prevMonth = () => {
-    setCalendarDate(new Date(Date.UTC(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() - 1, 1)));
+    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1));
   };
 
   const nextMonth = () => {
-    setCalendarDate(new Date(Date.UTC(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() + 1, 1)));
+    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1));
   };
 
   const getStatusIcon = (status) => {
