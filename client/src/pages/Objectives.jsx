@@ -128,8 +128,8 @@ const Objectives = () => {
   const handleViewProgress = async (objective) => {
     try {
       const response = await objectivesAPI.getWithProgress(objective._id, {
-        startDate: (() => { const d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })(),
-        endDate: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })()
+        startDate: (() => { const d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); return d.toISOString().split('T')[0]; })(),
+        endDate: (() => { return new Date().toISOString().split('T')[0]; })()
       });
       setSelectedObjective(response.data.data.objective);
       setProgressData(response.data.data.progress);

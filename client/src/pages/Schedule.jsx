@@ -182,8 +182,7 @@ const Schedule = () => {
     try {
       if (!pendingCompleteId) return;
 
-      const d = new Date();
-      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const today = new Date().toISOString().split('T')[0];
 
       // Parse time spent — accept minutes as number
       const timeSpentMinutes = notesForm.timeSpent ? parseInt(notesForm.timeSpent, 10) : undefined;
@@ -232,8 +231,7 @@ const Schedule = () => {
         toast.error('You can only skip objectives for today from this view.');
         return;
       }
-      const d = new Date();
-      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const today = new Date().toISOString().split('T')[0];
       await progressAPI.skip({
         learningObjectiveId: objectiveId,
         date: today,

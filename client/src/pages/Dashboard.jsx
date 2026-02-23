@@ -32,10 +32,7 @@ import {
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-const getTodayInIST = () => {
-  const istString = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
-  return new Date(istString);
-};
+
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -81,8 +78,7 @@ const Dashboard = () => {
   }, [calendarDate]);
 
   useEffect(() => {
-    const d = new Date();
-    const todayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const todayKey = new Date().toISOString().split('T')[0];
     const lastPlayed = localStorage.getItem('learnflow:lastWelcomeAnimDate');
     if (lastPlayed === todayKey || !welcomeRef.current) return;
 
@@ -131,8 +127,8 @@ const Dashboard = () => {
 
   const fetchCalendarAnalytics = async (date) => {
     try {
-      const month = date.getMonth() + 1;
-      const year = date.getFullYear();
+      const month = date.getUTCMonth() + 1;
+      const year = date.getUTCFullYear();
       const res = await analyticsAPI.getDaily(month, year);
       const map = {};
       (res.data.data || []).forEach((day) => {
@@ -146,23 +142,23 @@ const Dashboard = () => {
 
   // Calendar functions
   const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const firstDay = new Date(Date.UTC(year, month, 1));
+    const lastDay = new Date(Date.UTC(year, month + 1, 0));
+    const daysInMonth = lastDay.getUTCDate();
+    const startingDay = firstDay.getUTCDay();
 
     const days = [];
 
     // Previous month days
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    const prevMonthLastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
     for (let i = startingDay - 1; i >= 0; i--) {
       const day = prevMonthLastDay - i;
       days.push({
         day,
         currentMonth: false,
-        date: new Date(year, month - 1, day),
+        date: new Date(Date.UTC(year, month - 1, day)),
       });
     }
 
@@ -171,7 +167,7 @@ const Dashboard = () => {
       days.push({
         day: i,
         currentMonth: true,
-        date: new Date(year, month, i),
+        date: new Date(Date.UTC(year, month, i)),
       });
     }
 
@@ -181,7 +177,7 @@ const Dashboard = () => {
       days.push({
         day: i,
         currentMonth: false,
-        date: new Date(year, month + 1, i),
+        date: new Date(Date.UTC(year, month + 1, i)),
       });
     }
 
@@ -190,8 +186,9 @@ const Dashboard = () => {
 
   const isToday = (dayItem) => {
     if (!dayItem?.date) return false;
-    const today = getTodayInIST();
-    return dayItem.date.toDateString() === today.toDateString();
+    const todayISO = new Date().toISOString().split('T')[0];
+    const itemISO = dayItem.date.toISOString().split('T')[0];
+    return todayISO === itemISO;
   };
 
   const getDayStatus = (dateObj) => {
@@ -232,11 +229,11 @@ const Dashboard = () => {
   };
 
   const prevMonth = () => {
-    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1));
+    setCalendarDate(new Date(Date.UTC(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() - 1, 1)));
   };
 
   const nextMonth = () => {
-    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1));
+    setCalendarDate(new Date(Date.UTC(calendarDate.getUTCFullYear(), calendarDate.getUTCMonth() + 1, 1)));
   };
 
   const getStatusIcon = (status) => {
