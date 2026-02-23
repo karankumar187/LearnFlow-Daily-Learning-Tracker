@@ -454,27 +454,30 @@ const Dashboard = () => {
                           <h4 className="font-medium text-gray-800 dark:text-gray-100">
                             {item.learningObjective?.title || 'Unknown Objective'}
                           </h4>
-                          {item.learningObjective?.url && (
-                            <a
-                              href={item.learningObjective.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                              title="Open Learning Resource"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {item.learningObjective?.category || 'General'}
                         </p>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(item.status)}`}>
-                      {item.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {item.learningObjective?.url && (
+                        <a
+                          href={item.learningObjective.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 flex items-center gap-1 border border-blue-100 transition-colors shadow-sm"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Open Learning Resource"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open
+                        </a>
+                      )}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(item.status)}`}>
+                        {item.status}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -561,27 +564,28 @@ const Dashboard = () => {
                       className="w-1 h-10 rounded-full"
                       style={{ backgroundColor: item.learningObjective?.color || '#4A7C59' }}
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-1 items-center justify-between">
+                      <div className="flex-1 pr-2">
                         <p className="font-medium text-sm text-gray-800 dark:text-gray-100">
                           {item.learningObjective?.title}
                         </p>
-                        {item.learningObjective?.url && (
-                          <a
-                            href={item.learningObjective.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Open Learning Resource"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {item.learningObjective?.category}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.learningObjective?.category}
-                      </p>
+                      {item.learningObjective?.url && (
+                        <a
+                          href={item.learningObjective.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 flex items-center gap-1 border border-blue-100 transition-colors shadow-sm shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Open Learning Resource"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}

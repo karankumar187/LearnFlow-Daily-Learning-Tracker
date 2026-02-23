@@ -405,18 +405,6 @@ const Schedule = () => {
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium text-gray-800 dark:text-gray-100">{objective.title}</h4>
-                            {objective.url && (
-                              <a
-                                href={objective.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                                title="Open Learning Resource"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                              </a>
-                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                             <span>{objective.category}</span>
@@ -433,6 +421,18 @@ const Schedule = () => {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        {objective.url && (
+                          <a
+                            href={objective.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors flex items-center gap-1 border border-blue-100"
+                            title="Open Learning Resource"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Open Resource
+                          </a>
+                        )}
                         {progress?.status === 'completed' && (
                           <div className="flex items-center gap-2">
                             <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-sm font-medium">
