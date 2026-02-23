@@ -77,24 +77,30 @@ const syncProgress = async (userId, daysToLookBack = 7, timezone = 'UTC') => {
             });
 
             const existingObjectiveIds = existingProgress.map(p => p.learningObjective.toString());
-            const recordsToCreate = [];
 
             for (const item of daySchedule.items) {
                 const objectiveId = item.learningObjective.toString();
                 if (!existingObjectiveIds.includes(objectiveId)) {
                     const isToday = i === 0;
-                    recordsToCreate.push({
-                        user: userId,
-                        learningObjective: item.learningObjective,
-                        date: targetDate.clone().startOf('day').toDate(),
-                        status: isToday ? 'pending' : 'missed',
-                        timeSpent: 0
-                    });
+                    // Use upsert to prevent duplicate-insert from concurrent sync calls
+                    await DailyProgress.updateOne(
+                        {
+                            user: userId,
+                            learningObjective: item.learningObjective,
+                            date: targetDate.clone().startOf('day').toDate()
+                        },
+                        {
+                            $setOnInsert: {
+                                user: userId,
+                                learningObjective: item.learningObjective,
+                                date: targetDate.clone().startOf('day').toDate(),
+                                status: isToday ? 'pending' : 'missed',
+                                timeSpent: 0
+                            }
+                        },
+                        { upsert: true }
+                    );
                 }
-            }
-
-            if (recordsToCreate.length > 0) {
-                await DailyProgress.insertMany(recordsToCreate);
             }
         }
     } catch (error) {
