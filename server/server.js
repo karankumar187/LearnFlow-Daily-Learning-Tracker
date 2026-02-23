@@ -48,15 +48,15 @@ const app = express();
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Guard: crash loudly if session secret is missing in production
-if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET && !process.env.JWT_SECRET) {
-  console.error('FATAL: SESSION_SECRET or JWT_SECRET env var is required in production.');
-  process.exit(1);
+// Session secret: prefer SESSION_SECRET, fall back to JWT_SECRET; warn loudly if neither is set
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'avanza_dev_fallback_change_in_prod';
+if (!process.env.SESSION_SECRET && !process.env.JWT_SECRET) {
+  console.warn('[WARNING] Neither SESSION_SECRET nor JWT_SECRET is set. Using insecure fallback — set env vars in production!');
 }
 
 // Express Session
 app.use(session({
-  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
