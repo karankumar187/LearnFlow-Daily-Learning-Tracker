@@ -6,7 +6,7 @@ const Schedule = require('../models/Schedule');
 const Notification = require('../models/Notification');
 const syncProgress = require('../utils/syncProgress');
 
-const TIMEZONE = 'Asia/Kolkata';
+const getUserTimezone = (req) => req.user?.preferences?.timezone || 'UTC';
 
 // @desc    Create or update daily progress
 // @route   POST /api/progress
@@ -37,6 +37,7 @@ exports.createOrUpdateProgress = async (req, res, next) => {
       });
     }
 
+    const TIMEZONE = getUserTimezone(req);
     const progressDateStart = moment.tz(date || new Date(), TIMEZONE).startOf('day').toDate();
     const progressDateEnd = moment.tz(date || new Date(), TIMEZONE).endOf('day').toDate();
 
@@ -136,7 +137,7 @@ exports.createOrUpdateProgress = async (req, res, next) => {
         }
 
         // 3) Streak milestone check
-        const consecutiveDays = await calculateStreak(req.user.id);
+        const consecutiveDays = await calculateStreak(req.user.id, TIMEZONE);
         const milestones = [3, 5, 7, 14, 21, 30, 50, 100];
         if (milestones.includes(consecutiveDays)) {
           await Notification.create({
@@ -162,7 +163,7 @@ exports.createOrUpdateProgress = async (req, res, next) => {
 };
 
 // Helper: calculate consecutive days with at least 1 completed task
-async function calculateStreak(userId) {
+async function calculateStreak(userId, TIMEZONE) {
   let streak = 0;
   let checkDate = moment.tz(TIMEZONE).startOf('day');
 
@@ -197,6 +198,7 @@ exports.getDailyProgress = async (req, res, next) => {
     // Sync before fetching
     await syncProgress(req.user.id);
 
+    const TIMEZONE = getUserTimezone(req);
     const queryDateStart = date
       ? moment.tz(date, TIMEZONE).startOf('day').toDate()
       : moment.tz(TIMEZONE).startOf('day').toDate();
@@ -240,6 +242,7 @@ exports.getProgressRange = async (req, res, next) => {
     // Sync before fetching
     await syncProgress(req.user.id);
 
+    const TIMEZONE = getUserTimezone(req);
     const start = moment.tz(startDate, TIMEZONE).startOf('day').toDate();
     const end = moment.tz(endDate, TIMEZONE).endOf('day').toDate();
 

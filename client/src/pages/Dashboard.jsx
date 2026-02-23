@@ -32,12 +32,14 @@ import {
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-const getTodayInIST = () => {
-  const istString = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-  return new Date(istString);
+const getLocalToday = (timezone) => {
+  const tzString = new Date().toLocaleString('en-US', { timeZone: timezone || Intl.DateTimeFormat().resolvedOptions().timeZone });
+  return new Date(tzString);
 };
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const userTimezone = user?.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   const [stats, setStats] = useState({
     total: 0,
     completed: 0,
@@ -53,7 +55,7 @@ const Dashboard = () => {
   const [objectives, setObjectives] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentDate] = useState(getTodayInIST());
+  const [currentDate] = useState(getLocalToday(userTimezone));
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [dailyAnalytics, setDailyAnalytics] = useState({});
 
@@ -190,19 +192,19 @@ const Dashboard = () => {
 
   const isToday = (dayItem) => {
     if (!dayItem?.date) return false;
-    const today = getTodayInIST();
+    const today = getLocalToday(userTimezone);
     return dayItem.date.toDateString() === today.toDateString();
   };
 
   const getDayStatus = (dateObj) => {
-    // Build date key in the same timezone as analytics (Asia/Kolkata)
-    const istFormatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Kolkata',
+    // Build date key in the user's timezone exactly like the backend analyticsController does
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: userTimezone,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     });
-    const key = istFormatter.format(dateObj); // YYYY-MM-DD
+    const key = formatter.format(dateObj); // YYYY-MM-DD
     const data = dailyAnalytics[key];
     if (!data || data.total === 0) return null;
 

@@ -24,7 +24,7 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password, timezone } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -35,11 +35,15 @@ exports.register = async (req, res, next) => {
       });
     }
 
+    const preferences = {};
+    if (timezone) preferences.timezone = timezone;
+
     // Create user
     const user = await User.create({
       name,
       email,
-      password
+      password,
+      ...(Object.keys(preferences).length > 0 && { preferences })
     });
 
     // Generate token

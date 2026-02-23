@@ -4,7 +4,7 @@ const LearningObjective = require('../models/LearningObjective');
 const Schedule = require('../models/Schedule');
 const syncProgress = require('../utils/syncProgress');
 
-const TIMEZONE = 'Asia/Kolkata';
+const getUserTimezone = (req) => req.user?.preferences?.timezone || 'UTC';
 
 // @desc    Get overall analytics
 // @route   GET /api/analytics/overall
@@ -14,6 +14,7 @@ exports.getOverallAnalytics = async (req, res, next) => {
     const { period } = req.query; // 'daily', 'weekly', 'monthly', 'all'
 
     let dateFilter = {};
+    const TIMEZONE = getUserTimezone(req);
     const now = moment.tz(TIMEZONE);
 
     if (period === 'daily') {
@@ -87,6 +88,7 @@ exports.getAnalyticsByObjective = async (req, res, next) => {
     const { startDate, endDate } = req.query;
 
     let dateFilter = {};
+    const TIMEZONE = getUserTimezone(req);
     if (startDate && endDate) {
       dateFilter = {
         date: {
@@ -165,6 +167,7 @@ exports.getDailyAnalytics = async (req, res, next) => {
   try {
     const { month, year } = req.query;
 
+    const TIMEZONE = getUserTimezone(req);
     const targetMonth = month ? parseInt(month) - 1 : moment.tz(TIMEZONE).month();
     const targetYear = year ? parseInt(year) : moment.tz(TIMEZONE).year();
 
@@ -235,6 +238,7 @@ exports.getDailyAnalytics = async (req, res, next) => {
 // @access  Private
 exports.getStreakInfo = async (req, res, next) => {
   try {
+    const TIMEZONE = getUserTimezone(req);
     // Sync before fetching
     await syncProgress(req.user.id, 14);
 
@@ -316,6 +320,7 @@ exports.getStreakInfo = async (req, res, next) => {
 // @access  Private
 exports.getWeeklyChartData = async (req, res, next) => {
   try {
+    const TIMEZONE = getUserTimezone(req);
     const now = moment.tz(TIMEZONE);
     const startOfWeek = now.clone().startOf('week');
     const endOfWeek = now.clone().endOf('week');
@@ -368,6 +373,7 @@ exports.getWeeklyChartData = async (req, res, next) => {
 exports.getCategoryAnalytics = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
+    const TIMEZONE = getUserTimezone(req);
 
     let dateFilter = {};
     if (startDate && endDate) {

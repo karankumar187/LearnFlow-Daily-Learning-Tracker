@@ -26,7 +26,7 @@ const Layout = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [theme, setTheme] = useState('light');
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -154,6 +154,18 @@ const Layout = () => {
                   <div className="w-12 h-6 bg-green-700 rounded-full relative cursor-pointer">
                     <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 shadow"></div>
                   </div>
+                </div>
+                <div className="flex items-center justify-between py-2 mt-2 border-t border-gray-100 pt-4">
+                  <span className="text-sm text-gray-800 font-medium">Timezone</span>
+                  <select
+                    value={user?.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'}
+                    onChange={(e) => updateProfile({ preferences: { ...user?.preferences, timezone: e.target.value } })}
+                    className="text-sm bg-white border border-gray-200 text-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500 max-w-[180px]"
+                  >
+                    {[...new Set([Intl.DateTimeFormat().resolvedOptions().timeZone, 'UTC', 'America/New_York', 'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Asia/Kolkata', 'Asia/Tokyo', 'Asia/Dubai', 'Australia/Sydney'])].filter(Boolean).map(tz => (
+                      <option key={tz} value={tz}>{tz}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <button
