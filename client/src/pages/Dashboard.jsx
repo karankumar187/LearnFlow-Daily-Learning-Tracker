@@ -110,6 +110,9 @@ const Dashboard = () => {
       const detected = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       handleTimezoneChange(detected);
     }
+
+    // Silently clean up duplicate and phantom progress entries on every login
+    analyticsAPI.cleanupPhantom().catch(() => { });
   }, []);
 
   useEffect(() => {

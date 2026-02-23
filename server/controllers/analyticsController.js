@@ -503,30 +503,53 @@ exports.getCategoryAnalytics = async (req, res, next) => {
   }
 };
 
-// @desc    Delete phantom DailyProgress records created before first schedule
+// @desc    Delete phantom DailyProgress records created before first schedule + remove duplicates
 // @route   DELETE /api/analytics/cleanup-phantom
 // @access  Private
 exports.cleanupPhantomProgress = async (req, res, next) => {
   try {
     const scheduleStart = await getScheduleStartDate(req.user.id, req.user);
+    let phantomDeleted = 0;
 
-    if (!scheduleStart) {
-      return res.status(200).json({
-        success: true,
-        message: 'No schedule found — nothing to clean up.',
-        deleted: 0
+    // 1. Remove pre-schedule phantom entries
+    if (scheduleStart) {
+      const phantom = await DailyProgress.deleteMany({
+        user: req.user.id,
+        date: { $lt: scheduleStart }
       });
+      phantomDeleted = phantom.deletedCount;
     }
 
-    const result = await DailyProgress.deleteMany({
-      user: req.user.id,
-      date: { $lt: scheduleStart }
-    });
+    // 2. Remove duplicate entries (same user + objective + date)
+    const STATUS_RANK = { completed: 4, partial: 3, pending: 2, missed: 1, skipped: 0 };
+    const duplicates = await DailyProgress.aggregate([
+      { $match: { user: req.user._id } },
+      {
+        $group: {
+          _id: { learningObjective: '$learningObjective', date: '$date' },
+          ids: { $push: '$_id' },
+          count: { $sum: 1 }
+        }
+      },
+      { $match: { count: { $gt: 1 } } }
+    ]);
+
+    let dupDeleted = 0;
+    for (const group of duplicates) {
+      const docs = await DailyProgress.find({ _id: { $in: group.ids } });
+      docs.sort((a, b) => (STATUS_RANK[b.status] ?? 0) - (STATUS_RANK[a.status] ?? 0));
+      const [, ...rest] = docs;
+      if (rest.length) {
+        await DailyProgress.deleteMany({ _id: { $in: rest.map(d => d._id) } });
+        dupDeleted += rest.length;
+      }
+    }
 
     res.status(200).json({
       success: true,
-      message: `Removed ${result.deletedCount} phantom progress records from before your schedule was created.`,
-      deleted: result.deletedCount,
+      message: `Cleaned up ${phantomDeleted} phantom + ${dupDeleted} duplicate progress records.`,
+      phantomDeleted,
+      dupDeleted,
       scheduleStartDate: scheduleStart
     });
   } catch (error) {
