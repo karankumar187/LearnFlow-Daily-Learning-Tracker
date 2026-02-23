@@ -20,6 +20,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Import DB connection
 const connectDB = require('./config/db');
+const dedupProgress = require('./utils/dedupProgress');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -127,8 +128,7 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    timezone: 'Asia/Kolkata (IST)'
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -159,8 +159,11 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 connectDB()
-  .then(() => {
+  .then(async () => {
     console.log('Database connected');
+
+    // Clean up any duplicate DailyProgress entries before unique index applies
+    await dedupProgress();
 
     // Setup Passport strategies
     require('./config/passportConfig')();

@@ -103,6 +103,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // Auto-detect browser timezone if none saved yet
+    const saved = localStorage.getItem('avanza:timezone');
+    if (!saved) {
+      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      handleTimezoneChange(detected);
+    }
   }, []);
 
   useEffect(() => {
