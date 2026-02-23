@@ -22,7 +22,7 @@ const Schedule = () => {
   const [schedules, setSchedules] = useState([]);
   const [objectives, setObjectives] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [selectedDay, setSelectedDay] = useState(days[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]);
+  const [selectedDay, setSelectedDay] = useState(days[new Date().getUTCDay() === 0 ? 6 : new Date().getUTCDay() - 1]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
@@ -162,7 +162,7 @@ const Schedule = () => {
   };
 
   const isTodayTab = () => {
-    const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    const todayIndex = new Date().getUTCDay() === 0 ? 6 : new Date().getUTCDay() - 1;
     const todayName = days[todayIndex];
     return selectedDay === todayName;
   };
@@ -250,7 +250,7 @@ const Schedule = () => {
   const getObjectiveById = (id) => objectives.find(o => o._id === id);
 
   const getProgressForObjective = (objectiveId) => {
-    const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    const todayIndex = new Date().getUTCDay() === 0 ? 6 : new Date().getUTCDay() - 1;
     const todayName = days[todayIndex];
     // Only show / use progress when viewing today's schedule
     if (selectedDay !== todayName) return undefined;
