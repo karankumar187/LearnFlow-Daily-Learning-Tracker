@@ -32,23 +32,12 @@ import {
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-const getLocalToday = (timezone) => {
-  try {
-    const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(new Date());
-    const year = parseInt(parts.find(p => p.type === 'year').value, 10);
-    const month = parseInt(parts.find(p => p.type === 'month').value, 10);
-    const day = parseInt(parts.find(p => p.type === 'day').value, 10);
-    return new Date(year, month - 1, day);
-  } catch (e) {
-    console.error('Timezone parsing error, falling back to local Date:', e);
-    return new Date();
-  }
+const getTodayInIST = () => {
+  const istString = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
+  return new Date(istString);
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const userTimezone = user?.preferences?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   const [stats, setStats] = useState({
     total: 0,
     completed: 0,
@@ -64,7 +53,7 @@ const Dashboard = () => {
   const [objectives, setObjectives] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentDate] = useState(getLocalToday(userTimezone));
+  const [currentDate] = useState(getTodayInIST());
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [dailyAnalytics, setDailyAnalytics] = useState({});
 
@@ -201,31 +190,19 @@ const Dashboard = () => {
 
   const isToday = (dayItem) => {
     if (!dayItem?.date) return false;
-    const today = getLocalToday(userTimezone);
+    const today = getTodayInIST();
     return dayItem.date.toDateString() === today.toDateString();
   };
 
   const getDayStatus = (dateObj) => {
-    if (!dateObj || isNaN(dateObj.valueOf())) return null;
-    let key;
-    try {
-      const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: userTimezone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).formatToParts(dateObj);
-      const y = parts.find(p => p.type === 'year').value;
-      const m = parts.find(p => p.type === 'month').value;
-      const d = parts.find(p => p.type === 'day').value;
-      key = `${y}-${m}-${d}`; // YYYY-MM-DD
-    } catch (e) {
-      // Fallback to local string parsing
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      key = `${y}-${m}-${d}`;
-    }
+    // Build date key in the same timezone as analytics (UTC)
+    const istFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const key = istFormatter.format(dateObj); // YYYY-MM-DD
     const data = dailyAnalytics[key];
     if (!data || data.total === 0) return null;
 

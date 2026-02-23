@@ -2,7 +2,7 @@ const Notification = require('../models/Notification');
 const DailyProgress = require('../models/DailyProgress');
 const moment = require('moment-timezone');
 
-const getUserTimezone = (req) => req.user?.preferences?.timezone || 'UTC';
+const TIMEZONE = 'UTC';
 
 // @desc    Get all notifications for user
 // @route   GET /api/notifications
@@ -92,7 +92,6 @@ exports.createNotification = async (req, res, next) => {
 // @access  Private
 exports.triggerPendingReminder = async (req, res, next) => {
     try {
-        const TIMEZONE = getUserTimezone(req);
         const todayStart = moment.tz(TIMEZONE).startOf('day').toDate();
         const todayEnd = moment.tz(TIMEZONE).endOf('day').toDate();
 

@@ -4,7 +4,7 @@ const LearningObjective = require('../models/LearningObjective');
 const Schedule = require('../models/Schedule');
 const syncProgress = require('../utils/syncProgress');
 
-const getUserTimezone = (req) => req.user?.preferences?.timezone || 'UTC';
+const TIMEZONE = 'UTC';
 
 // @desc    Get overall analytics
 // @route   GET /api/analytics/overall
@@ -14,7 +14,6 @@ exports.getOverallAnalytics = async (req, res, next) => {
     const { period } = req.query; // 'daily', 'weekly', 'monthly', 'all'
 
     let dateFilter = {};
-    const TIMEZONE = getUserTimezone(req);
     const now = moment.tz(TIMEZONE);
 
     if (period === 'daily') {
@@ -88,19 +87,11 @@ exports.getAnalyticsByObjective = async (req, res, next) => {
     const { startDate, endDate } = req.query;
 
     let dateFilter = {};
-    const TIMEZONE = getUserTimezone(req);
     if (startDate && endDate) {
       dateFilter = {
         date: {
           $gte: moment.tz(startDate, TIMEZONE).startOf('day').toDate(),
           $lte: moment.tz(endDate, TIMEZONE).endOf('day').toDate()
-        }
-      };
-    } else {
-      // Exclude future tasks from overall objective stats
-      dateFilter = {
-        date: {
-          $lte: moment.tz(TIMEZONE).endOf('day').toDate()
         }
       };
     }
@@ -117,11 +108,14 @@ exports.getAnalyticsByObjective = async (req, res, next) => {
     // Get progress for each objective
     const objectiveAnalytics = await Promise.all(
       objectives.map(async (objective) => {
-        const progress = await DailyProgress.find({
+        const rawProgress = await DailyProgress.find({
           user: req.user.id,
           learningObjective: objective._id,
           ...dateFilter
         });
+
+        const todayEnd = moment.tz(TIMEZONE).endOf('day').toDate();
+        const progress = rawProgress.filter(p => p.date <= todayEnd);
 
         const total = progress.length;
         const completed = progress.filter(p => p.status === 'completed').length;
@@ -174,7 +168,6 @@ exports.getDailyAnalytics = async (req, res, next) => {
   try {
     const { month, year } = req.query;
 
-    const TIMEZONE = getUserTimezone(req);
     const targetMonth = month ? parseInt(month) - 1 : moment.tz(TIMEZONE).month();
     const targetYear = year ? parseInt(year) : moment.tz(TIMEZONE).year();
 
@@ -245,7 +238,6 @@ exports.getDailyAnalytics = async (req, res, next) => {
 // @access  Private
 exports.getStreakInfo = async (req, res, next) => {
   try {
-    const TIMEZONE = getUserTimezone(req);
     // Sync before fetching
     await syncProgress(req.user.id, 14);
 
@@ -327,7 +319,6 @@ exports.getStreakInfo = async (req, res, next) => {
 // @access  Private
 exports.getWeeklyChartData = async (req, res, next) => {
   try {
-    const TIMEZONE = getUserTimezone(req);
     const now = moment.tz(TIMEZONE);
     const startOfWeek = now.clone().startOf('week');
     const endOfWeek = now.clone().endOf('week');
@@ -380,7 +371,6 @@ exports.getWeeklyChartData = async (req, res, next) => {
 exports.getCategoryAnalytics = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
-    const TIMEZONE = getUserTimezone(req);
 
     let dateFilter = {};
     if (startDate && endDate) {
@@ -388,13 +378,6 @@ exports.getCategoryAnalytics = async (req, res, next) => {
         date: {
           $gte: moment.tz(startDate, TIMEZONE).startOf('day').toDate(),
           $lte: moment.tz(endDate, TIMEZONE).endOf('day').toDate()
-        }
-      };
-    } else {
-      // Exclude future tasks from overall category stats
-      dateFilter = {
-        date: {
-          $lte: moment.tz(TIMEZONE).endOf('day').toDate()
         }
       };
     }

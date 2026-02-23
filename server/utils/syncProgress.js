@@ -1,7 +1,8 @@
 const moment = require('moment-timezone');
 const DailyProgress = require('../models/DailyProgress');
 const Schedule = require('../models/Schedule');
-const User = require('../models/User');
+
+const TIMEZONE = 'UTC';
 
 // In-memory lock to prevent race conditions when multiple API endpoints call syncProgress concurrently
 const syncLocks = new Map();
@@ -20,9 +21,6 @@ const syncProgress = async (userId, daysToLookBack = 7) => {
 
     const syncPromise = (async () => {
         try {
-            const user = await User.findById(userId).select('preferences');
-            const TIMEZONE = user?.preferences?.timezone || 'UTC';
-
             const schedule = await Schedule.findOne({
                 user: userId,
                 isDefault: true,

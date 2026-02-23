@@ -46,10 +46,6 @@ const userSchema = new mongoose.Schema({
     notificationsEnabled: {
       type: Boolean,
       default: true
-    },
-    timezone: {
-      type: String,
-      default: 'UTC'
     }
   },
   createdAt: {
