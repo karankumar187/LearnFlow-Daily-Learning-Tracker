@@ -461,19 +461,6 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {item.learningObjective?.url && (
-                        <a
-                          href={item.learningObjective.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 flex items-center gap-1 border border-blue-100 transition-colors shadow-sm"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Open Learning Resource"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          Open
-                        </a>
-                      )}
                       <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(item.status)}`}>
                         {item.status}
                       </span>
@@ -578,12 +565,12 @@ const Dashboard = () => {
                           href={item.learningObjective.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 flex items-center gap-1 border border-blue-100 transition-colors shadow-sm shrink-0"
+                          className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs font-medium hover:bg-gray-200 dark:hover:bg-slate-600 flex items-center gap-1 transition-colors shrink-0"
                           onClick={(e) => e.stopPropagation()}
                           title="Open Learning Resource"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          Open
+                          Link
                         </a>
                       )}
                     </div>

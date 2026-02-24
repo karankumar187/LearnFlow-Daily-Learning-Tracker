@@ -426,11 +426,11 @@ const Schedule = () => {
                             href={objective.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors flex items-center gap-1 border border-blue-100"
+                            className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-1"
                             title="Open Learning Resource"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                            Open Resource
+                            Link
                           </a>
                         )}
                         {progress?.status === 'completed' && (
