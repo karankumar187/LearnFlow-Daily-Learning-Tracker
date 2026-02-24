@@ -184,7 +184,7 @@ const Schedule = () => {
       if (!pendingCompleteId) return;
 
       const d = new Date();
-      const today = `${d.getFullYear()} -${String(d.getMonth() + 1).padStart(2, '0')} -${String(d.getDate()).padStart(2, '0')} `;
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
       // Parse time spent — accept minutes as number
       const timeSpentMinutes = notesForm.timeSpent ? parseInt(notesForm.timeSpent, 10) : undefined;
@@ -234,7 +234,7 @@ const Schedule = () => {
         return;
       }
       const d = new Date();
-      const today = `${d.getFullYear()} -${String(d.getMonth() + 1).padStart(2, '0')} -${String(d.getDate()).padStart(2, '0')} `;
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       await progressAPI.skip({
         learningObjectiveId: objectiveId,
         date: today,
