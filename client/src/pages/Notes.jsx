@@ -107,33 +107,58 @@ const Notes = () => {
     };
 
     // Handle saving the current active note
-    const handleSaveNote = async () => {
+    const handleSaveNote = async (isAutoSave = false) => {
         if (!activeNote) return;
 
         try {
-            setIsSaving(true);
+            if (!isAutoSave) setIsSaving(true);
             const res = await notesAPI.update(activeNote._id, {
                 title: activeNote.title,
                 content: activeNote.content
             });
 
             // Update local state list
-            const updatedNotes = notes.map(n =>
-                n._id === activeNote._id ? res.data.data : n
-            );
+            setNotes(prevNotes => {
+                const updatedNotes = prevNotes.map(n =>
+                    n._id === activeNote._id ? res.data.data : n
+                );
+                // Sort to put most recently updated at the top
+                updatedNotes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                return updatedNotes;
+            });
 
-            // Sort to put most recently updated at the top
-            updatedNotes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-
-            setNotes(updatedNotes);
-            setActiveNote(res.data.data);
-            toast.success('Note saved successfully');
+            if (isAutoSave) {
+                // For auto-save, only update the timestamp so we don't interrupt typing
+                setActiveNote(prev => prev?._id === activeNote._id ? { ...prev, updatedAt: res.data.data.updatedAt } : prev);
+            } else {
+                setActiveNote(res.data.data);
+                toast.success('Note saved successfully');
+            }
         } catch (error) {
-            toast.error('Failed to save note');
+            if (!isAutoSave) toast.error('Failed to save note');
         } finally {
-            setIsSaving(false);
+            if (!isAutoSave) setIsSaving(false);
         }
     };
+
+    // Auto-save effect
+    useEffect(() => {
+        if (!activeNote) return;
+
+        const timer = setTimeout(() => {
+            setNotes(currentNotes => {
+                const originalNote = currentNotes.find(n => n._id === activeNote._id);
+                // If the note has changed compared to the canoncial list, auto-save silently
+                if (originalNote && (originalNote.title !== activeNote.title || originalNote.content !== activeNote.content)) {
+                    handleSaveNote(true);
+                }
+                return currentNotes;
+            });
+        }, 1500);
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeNote?.title, activeNote?.content]);
 
     // Debounced auto-save listener (Optional: just visual for now without triggering tons of API calls)
     useEffect(() => {
@@ -141,7 +166,7 @@ const Notes = () => {
             // CMD+S or CTRL+S
             if ((e.metaKey || e.ctrlKey) && e.key === 's') {
                 e.preventDefault();
-                handleSaveNote();
+                handleSaveNote(false);
             }
         };
 
