@@ -116,7 +116,7 @@ const Layout = () => {
   const unreadCount = Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0;
 
   return (
-    <div className="min-h-screen" style={{ background: '#F8F4EE' }}>
+    <div className="min-h-screen bg-[#F8F4EE] dark:bg-slate-950 transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -218,18 +218,17 @@ const Layout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-72 backdrop-blur-xl border-r z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed left-0 top-0 h-full w-72 backdrop-blur-xl border-r z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 bg-[#FAFAF8] dark:bg-slate-900 border-[#E4E8E5] dark:border-slate-800 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
-        style={{ background: '#FAFAF8', borderColor: '#E4E8E5' }}
       >
         {/* Logo */}
-        <div className="p-6 border-b" style={{ borderColor: '#E4E8E5' }}>
+        <div className="p-6 border-b border-[#E4E8E5] dark:border-slate-800">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm p-2" style={{ background: '#E8F2EC' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm p-2 bg-[#E8F2EC] dark:bg-green-900/30">
               <LogoIcon className="w-8 h-8" color="white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold" style={{ color: '#1A2E1F' }}>
+              <h1 className="text-xl font-bold text-[#1A2E1F] dark:text-white">
                 Avanza
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">Master Your Learning</p>
@@ -249,22 +248,14 @@ const Layout = () => {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${active
-                  ? 'shadow-sm'
-                  : 'hover:bg-opacity-60'
+                  ? 'shadow-sm bg-[#E8F2EC] text-[#1A2E1F] dark:bg-green-900/40 dark:text-green-300'
+                  : 'text-[#5C6E62] dark:text-slate-400 hover:bg-[#EEF6F0] dark:hover:bg-slate-800 dark:hover:text-slate-200 hover:text-[#1A2E1F]'
                   }`}
-                style={active ? {
-                  background: '#E8F2EC',
-                  color: '#1A2E1F'
-                } : {
-                  color: '#5C6E62',
-                }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#EEF6F0'; }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{item.label}</span>
                 {item.path === '/ai-assistant' && (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#E8F2EC', color: '#1A2E1F' }}>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium bg-[#E8F2EC] text-[#1A2E1F] dark:bg-green-900/40 dark:text-green-300">
                     AI
                   </span>
                 )}
@@ -274,8 +265,8 @@ const Layout = () => {
         </nav>
 
         {/* User Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t" style={{ borderColor: '#E4E8E5' }}>
-          <div className="rounded-xl p-4" style={{ background: '#F8F4EE' }}>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#E4E8E5] dark:border-slate-800">
+          <div className="rounded-xl p-4 bg-[#F8F4EE] dark:bg-slate-800/50">
             <div className="flex items-center gap-3 mb-3">
               {user?.avatar ? (
                 <img
@@ -301,7 +292,7 @@ const Layout = () => {
       {/* Main Content */}
       <div className="lg:ml-72 min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 backdrop-blur-xl border-b" style={{ background: 'rgba(248,244,238,0.92)', borderColor: '#E4E8E5' }}>
+        <header className="sticky top-0 z-30 backdrop-blur-xl border-b bg-[#F8F4EE]/90 dark:bg-slate-950/90 border-[#E4E8E5] dark:border-slate-800">
           <div className="flex items-center justify-between px-4 py-4 lg:px-8">
             <div className="flex items-center gap-4">
               <button
@@ -320,8 +311,7 @@ const Layout = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
-                className="px-2 py-1 rounded-full border text-xs font-medium transition-colors"
-                style={{ borderColor: '#C8DDD0', color: '#2D6A4F', background: 'transparent' }}
+                className="p-2 rounded-xl transition-colors border border-[#C8DDD0] dark:border-slate-700 text-[#2D6A4F] dark:text-green-400 bg-transparent hover:bg-white/50 dark:hover:bg-slate-800"
               >
                 {theme === 'dark' ? 'Light' : 'Dark'}
               </button>

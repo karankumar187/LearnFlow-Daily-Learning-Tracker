@@ -287,7 +287,7 @@ const Schedule = () => {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-800 text-white font-medium  transition-all"
+          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-800 dark:bg-slate-700 text-white font-medium transition-all"
         >
           <Plus className="w-5 h-5" />
           New Schedule
@@ -304,7 +304,7 @@ const Schedule = () => {
                 onClick={() => setSelectedSchedule(schedule)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedSchedule?._id === schedule._id
                   ? 'bg-green-700 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                   }`}
               >
                 {schedule.name}
@@ -347,8 +347,8 @@ const Schedule = () => {
                   key={day}
                   onClick={() => setSelectedDay(day)}
                   className={`px-4 py-2 rounded-lg font-medium capitalize transition-all ${selectedDay === day
-                    ? 'bg-gray-800 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gray-800 dark:bg-slate-700 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                     }`}
                 >
                   {day}
@@ -564,7 +564,7 @@ const Schedule = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                  className="flex-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -592,7 +592,7 @@ const Schedule = () => {
                   <button
                     key={objective._id}
                     onClick={() => handleAddItem(objective._id)}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl bg-gray-50 hover:bg-green-50 transition-colors text-left"
+                    className="w-full flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 hover:bg-green-50 dark:hover:bg-slate-700 transition-colors text-left"
                   >
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -619,7 +619,7 @@ const Schedule = () => {
 
             <button
               onClick={() => setShowAddItemModal(false)}
-              className="w-full mt-4 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+              className="w-full mt-4 px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
             >
               Cancel
             </button>
@@ -669,7 +669,7 @@ const Schedule = () => {
             <div className="flex gap-3">
               <button
                 onClick={handleCancelComplete}
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
               >
                 Cancel
               </button>

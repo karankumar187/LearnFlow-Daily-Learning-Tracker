@@ -241,7 +241,7 @@ const Objectives = () => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-800 text-white font-medium  transition-all"
+          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-800 dark:bg-slate-700 text-white font-medium transition-all"
         >
           <Plus className="w-5 h-5" />
           Add Objective
@@ -469,7 +469,7 @@ const Objectives = () => {
                         onClick={() => setFormData({ ...formData, icon: option.value })}
                         className={`p-3 rounded-lg border-2 transition-all ${formData.icon === option.value
                           ? 'border-green-700 bg-green-50'
-                          : 'border-gray-200 hover:bg-gray-50'
+                          : 'border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'
                           }`}
                       >
                         <Icon className="w-5 h-5 mx-auto" />
@@ -499,7 +499,7 @@ const Objectives = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                  className="flex-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -537,7 +537,7 @@ const Objectives = () => {
               </div>
               <button
                 onClick={() => setShowProgressModal(false)}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -548,7 +548,7 @@ const Objectives = () => {
                 {progressData.map((progress) => (
                   <div
                     key={progress._id}
-                    className="p-4 rounded-xl bg-gray-50"
+                    className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
@@ -569,7 +569,7 @@ const Objectives = () => {
                     </div>
 
                     {progress.notes && (
-                      <div className="mt-3 p-3 bg-white rounded-lg border border-gray-100">
+                      <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700">
                         <div className="flex items-center gap-2 text-gray-500 mb-1">
                           <FileText className="w-4 h-4" />
                           <span className="text-xs font-medium">Learning Notes</span>

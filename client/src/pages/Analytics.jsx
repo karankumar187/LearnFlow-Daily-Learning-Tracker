@@ -131,7 +131,7 @@ const Analytics = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-4 py-2.5 rounded-lg border border-gray-200 focus:border-green-700 focus:ring-2 focus:ring-green-200 outline-none transition-all bg-white"
+            className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-slate-700 focus:border-green-700 focus:ring-2 focus:ring-green-200 outline-none transition-all bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100"
           >
             {periodOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -139,7 +139,7 @@ const Analytics = () => {
           </select>
           <button
             onClick={() => toast.info('Export feature coming soon!')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             Export
@@ -310,7 +310,7 @@ const Analytics = () => {
               {objectiveStats.map((stat) => (
                 <tr
                   key={stat.objective.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                   onClick={() => setSelectedObjective(stat)}
                 >
                   <td className="py-3 px-4">
@@ -350,7 +350,7 @@ const Analytics = () => {
         <h3 className="text-lg font-semibold text-gray-800 mb-6">Performance by Category</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categoryStats.map((cat) => (
-            <div key={cat.category} className="p-4 rounded-xl bg-gray-50">
+            <div key={cat.category} className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-medium text-gray-800">{cat.category}</h4>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${cat.completionRate >= 80 ? 'bg-green-100 text-green-700' :
@@ -374,9 +374,9 @@ const Analytics = () => {
                   <span className="text-gray-700">{formatTime(cat.totalTimeSpent)}</span>
                 </div>
               </div>
-              <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="mt-3 h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gray-900 transition-all"
+                  className="h-full bg-gray-900 dark:bg-green-500 transition-all"
                   style={{ width: `${cat.completionRate}%` }}
                 />
               </div>
@@ -401,26 +401,26 @@ const Analytics = () => {
               </div>
               <button
                 onClick={() => setSelectedObjective(null)}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-gray-50 text-center">
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-center">
                 <div className="text-2xl font-bold text-gray-800">{selectedObjective.stats.total}</div>
                 <div className="text-sm text-gray-500">Total Tasks</div>
               </div>
-              <div className="p-4 rounded-xl bg-gray-50 text-center">
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-center">
                 <div className="text-2xl font-bold text-green-600">{selectedObjective.stats.completed}</div>
                 <div className="text-sm text-gray-500">Completed</div>
               </div>
-              <div className="p-4 rounded-xl bg-gray-50 text-center">
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-center">
                 <div className="text-2xl font-bold text-green-800">{selectedObjective.stats.completionRate}%</div>
                 <div className="text-sm text-gray-500">Completion Rate</div>
               </div>
-              <div className="p-4 rounded-xl bg-gray-50 text-center">
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 text-center">
                 <div className="text-2xl font-bold text-amber-800">{formatTime(selectedObjective.stats.totalTimeSpent)}</div>
                 <div className="text-sm text-gray-500">Time Spent</div>
               </div>

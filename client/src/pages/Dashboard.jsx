@@ -277,7 +277,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-6 animate-fadeIn" ref={welcomeRef}>
       {/* Welcome Section with Date */}
-      <div className="glass-card rounded-2xl p-6 bg-gray-100 ">
+      <div className="glass-card rounded-2xl p-6 bg-gray-100/50 dark:bg-slate-800/50">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4" data-welcome-anim>
           <div data-welcome-anim>
             <div className="flex items-center gap-2 text-green-800 dark:text-green-400 mb-2">
@@ -293,7 +293,7 @@ const Dashboard = () => {
           </div>
           <Link
             to="/ai-assistant"
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-800 text-white font-medium  transition-all"
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-800 dark:bg-slate-700 text-white font-medium transition-all"
           >
             <Sparkles className="w-5 h-5" />
             Get AI Schedule
@@ -493,10 +493,10 @@ const Dashboard = () => {
                 {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h3>
               <div className="flex gap-1">
-                <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
@@ -616,9 +616,9 @@ const Dashboard = () => {
 
             <Link
               to="/ai-assistant"
-              className="flex items-center gap-4 p-4 rounded-xl bg-gray-800 text-white  hover:transition-colors"
+              className="flex items-center gap-4 p-4 rounded-xl bg-gray-800 dark:bg-slate-800 text-white hover:bg-gray-700 dark:hover:bg-slate-700 transition-colors"
             >
-              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-white/20 dark:bg-black/20 flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
