@@ -332,10 +332,10 @@ const Dashboard = () => {
             </div>
 
             <div className="stagger-item stat-card">
-              <div className="stat-icon" style={{ backgroundColor: '#F3E8FF', color: '#6D28D9' }}>
+              <div className="stat-icon" style={{ backgroundColor: '#F1F5F9', color: '#475569' }}>
                 <Clock className="w-6 h-6" />
               </div>
-              <div className="stat-value" style={{ color: '#4C1D95' }}>{formatTime(stats.totalTimeSpent)}</div>
+              <div className="stat-value" style={{ color: '#334155' }}>{formatTime(stats.totalTimeSpent)}</div>
               <div className="stat-label">Time Spent</div>
             </div>
 
