@@ -23,13 +23,22 @@ const getTodayInIST = () => {
   return new Date(istString);
 };
 
+const formatTime = (totalMinutes) => {
+  if (!totalMinutes) return '0h 0m';
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  return `${hours}h ${minutes}m`;
+};
+
 const Dashboard = () => {
   const [stats, setStats] = useState({
     total: 0,
     completed: 0,
     missed: 0,
     pending: 0,
-    completionRate: 0
+    completionRate: 0,
+    totalTimeSpent: 0
   });
   const [streak, setStreak] = useState({
     currentStreak: 0,
@@ -305,7 +314,7 @@ const Dashboard = () => {
         {/* Left Column - Stats & Charts */}
         <div className="xl:col-span-2 space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="stagger-item stat-card">
               <div className="stat-icon blue">
                 <Target className="w-6 h-6" />
@@ -328,6 +337,14 @@ const Dashboard = () => {
               </div>
               <div className="stat-value" style={{ color: '#2D6A4F' }}>{stats.completionRate}%</div>
               <div className="stat-label">Completion</div>
+            </div>
+
+            <div className="stagger-item stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#F3E8FF', color: '#6D28D9' }}>
+                <Clock className="w-6 h-6" />
+              </div>
+              <div className="stat-value" style={{ color: '#4C1D95' }}>{formatTime(stats.totalTimeSpent)}</div>
+              <div className="stat-label">Time Spent</div>
             </div>
 
             <div className="stagger-item stat-card">
